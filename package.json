@@ -1,0 +1,12 @@
+{
+  "name": "node-vlang-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/node": "^13.5.0",
+    "glob": "^7.1.6",
+    "web-tree-sitter": "^0.16.0"
+  }
+}
