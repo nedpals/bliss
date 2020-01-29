@@ -2,8 +2,23 @@ import Parser from "web-tree-sitter";
 
 import getAndResolveImports from "./imports";
 import { newTree, trees } from "./trees";
-import { declare, typesmap, getCurrentModule } from "./types";
+import { declare, typesmap, getCurrentModule, insertTypes, TypeMap } from "./types";
 
+interface Analyzer {
+    typesmap: TypeMap,
+    files: AnalyzedFiles,
+    trees: { [path: string]: Parser.Tree }
+}
+
+interface IAnalyzer {
+    filename: string,
+    name: string,
+    modules: string[]
+}
+
+interface AnalyzedFiles {
+    [paths: string]: IAnalyzer
+}
 
 async function init() {
     // Initialize parser
@@ -36,8 +51,8 @@ async function init() {
     // canledudebudebu
     // # Hello World!
     fn main() {
-        name := 'Ned'
-        println('Hello World!')
+        hello := Hello{}
+        woo := hello.world('hey')
     }
     `;
 
@@ -46,11 +61,10 @@ async function init() {
 
     Object.keys(trees).forEach(p => {
         const tree = trees[p].rootNode;
-        tree.children?.forEach(n => {
-            declare(n);
-            // console.log(n);
-        });
+        const moduleName = getCurrentModule(tree);
+        insertTypes(tree, moduleName);
     });
+
     console.log(typesmap);
 }
 init();

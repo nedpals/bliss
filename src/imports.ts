@@ -6,7 +6,7 @@ import { promisify } from "util";
 
 import { exc_os_suffix } from "./utils";
 import { newTree } from "./trees";
-import { declare } from "./types";
+import { declare, getCurrentModule, typesmap, insertTypes } from "./types";
 
 export type Module = string;
 export const cached_trees: { [key: string]: Parser.Tree } = {};
@@ -71,14 +71,12 @@ export async function resolveImports(modules: Module[], parser: Parser): Promise
                 continue;
             }
             await newTree({ filepath: p, tree: cached_trees }, parser);
+            
             const mods = await getImports(cached_trees[p].rootNode);
             const resolved = await resolveImports(mods, parser);
             const resolved_modnames = resolved_modules.map(r => r.name);
-            
-            for (let c of cached_trees[p].rootNode.children) {
-                if (c.type.length <= 1) { continue; }
-                declare(c);
-            }
+            const moduleName = getCurrentModule(cached_trees[p].rootNode);
+            insertTypes(cached_trees[p].rootNode, moduleName);
 
             resolved_modules = resolved_modules.concat(resolved.filter(r => !resolved_modnames.includes(r.name)));
         }

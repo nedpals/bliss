@@ -1,51 +1,65 @@
 import Parser, { SyntaxNode } from "web-tree-sitter";
 import { buildComment, buildTypeSignature, buildFnSignature } from "./signatures";
-import { type } from "os";
+import { Module } from "./imports";
 
 interface TypeProperties {
     type: string,
     signature: string,
     comment?: string | null,
     fields?: TypeMap,
+    module?: Module,
     [f: string]: any 
 }
 
-interface TypeMap {
+export interface TypeMap {
     [x: string]: TypeProperties
 }
 
-export let typesmap: TypeMap = {};
+export const typesmap: TypeMap = {};
 
-export function declare(node: Parser.SyntaxNode | null) {
+export function insertTypes(root: Parser.SyntaxNode, module_name: Module): void {
+    root.children?.forEach(n => {
+        const [name, props] = declare(n);
+        
+        if (name.length >= 1) {
+            typesmap[`${module_name}.${name}`] = props;
+        }
+    });
+}
+
+export function declare(node: Parser.SyntaxNode | null): [string, TypeProperties] {    
+    // console.log(node?.type);
+
     switch (node?.type) {
         case 'type_declaration':
-            declareTypedef(node);
-            break;
+            return declareTypedef(node);
         case 'short_var_declaration':
-            declareVar(node);
-            break;
+            return declareVar(node);
         case 'struct_declaration':
-            declareStruct(node);
-            break;
+            return declareStruct(node);
         case 'enum_declaration':
-            declareEnum(node);
-            break;
+            return declareEnum(node);
         case 'method_declaration':
         case 'function_declaration':
-            declareFunction(node);
-            break;
+            return declareFunction(node);
         default:
-            break;
+            return ['', {
+                signature: '',
+                type: '',
+            }]
     }
 }
 
 export function identifyType(node: Parser.SyntaxNode | null): string {
     let type = '';
-    let nType = node?.type ?? 'unknown';
+    const custom_types = Object.keys(typesmap).filter((s, i, a) => typesmap[s].type !== "function");
+    const basic_types = ['bool', 'string', 'i8', 'byte', 'i16', 'u16', 'int', 'u32', 'i64', 'u64', ...new Set(custom_types)];
+
     switch (node?.type) {
         case 'pointer_type':
             let pointer_type = node?.children[0];
             type = identifyType(pointer_type as SyntaxNode);
+            break;
         case 'interpreted_string_literal':
         case 'raw_string_literal':
             type = 'string';
@@ -70,7 +84,7 @@ export function identifyType(node: Parser.SyntaxNode | null): string {
             type = '';
             break;
         case 'array_type':
-            let array_item = findChildByType(node, "item");
+            let array_item = node.namedChildren[0];
             let array_type = identifyType(array_item as SyntaxNode);
             type = `[]${array_type}`
             break;
@@ -83,12 +97,18 @@ export function identifyType(node: Parser.SyntaxNode | null): string {
             break;
         case 'type_conversion_expression':
             let type_name = node?.childForFieldName('type');
-            type = type_name?.text || '';
+            type = type_name?.text as string;
             break;
         case 'call_expression':
-            const basic_types = ['bool', 'string', 'i8', 'byte', 'i16', 'u16', 'int', 'u32', 'i64', 'u64', ...new Set(Object.values(typesmap).map(t => t.type))];
-            const fn_name = node?.childForFieldName('function')?.text as string;
-            type = basic_types.includes(fn_name) ? fn_name : typesmap[fn_name].type;
+            const fn_name = node?.childForFieldName('function');
+            const _fnn = fn_name?.text as string;
+            console.log(fn_name?.startIndex + ': ' + fn_name?.type);
+            if (fn_name?.type === "selector_expression") {
+                type = identifyType(fn_name);
+            } else {
+                type = basic_types.includes(_fnn) ? _fnn : 'void';
+                // typesmap[_fnn].type ??
+            }
             break;
         case 'struct_declaration':
             type = 'struct';
@@ -102,6 +122,7 @@ export function identifyType(node: Parser.SyntaxNode | null): string {
             break;
         case 'composite_literal':
             type = node?.childForFieldName('type')?.text as string;
+            break;
         case 'function_declaration':
         case 'method_declaration':
             type = buildFnSignature(node, false);
@@ -110,14 +131,20 @@ export function identifyType(node: Parser.SyntaxNode | null): string {
             let s_name = node?.childForFieldName('operand')?.text as string;
             let f_name = node?.childForFieldName('field')?.text as string;
             //@ts-ignore
-            type = typesmap[s_name].fields[f_name];
+            // type = typesmap[s_name].fields[f_name] || 'undefined';
+            // console.log(s_name + ': ' + f_name);
+            type = 'void';
             break;
         case 'false':
         case 'true':
             type = 'bool';
             break;
         case 'type_identifier':
-            type = node?.type as string;
+            type = node?.text as string;
+            break;
+        // case undefined:
+        //     type = 'undefined';
+        //     break;
         default:  
             type = 'unknown';
             break;  
@@ -134,18 +161,18 @@ export function filterChildrenByType(node: Parser.SyntaxNode | null, name: strin
     return node?.children?.filter(x => Array.isArray(name) ? name.includes(x.type) : x.type === name);
 }
 
-export function declareTypedef(node: Parser.SyntaxNode) {
+export function declareTypedef(node: Parser.SyntaxNode): [string, TypeProperties] {
     const spec = findChildByType(node, 'type_spec');
     const type_name = spec?.childForFieldName('name')?.text as string;
     const orig_type = identifyType(spec?.childForFieldName('type') as SyntaxNode);
 
-    typesmap[type_name as string] = {
+    return [type_name as string, {
         type: orig_type,
         signature: buildTypeSignature(`alias ${type_name}`, orig_type)
-    }
+    }]
 }
 
-export function declareFunction(node: Parser.SyntaxNode) {
+export function declareFunction(node: Parser.SyntaxNode): [string, TypeProperties] {
     const fn_name = node.childForFieldName('name')?.text;
     const declaration_list = node.childForFieldName('parameters')?.children;
     const fn_body = node.childForFieldName('body');
@@ -170,30 +197,28 @@ export function declareFunction(node: Parser.SyntaxNode) {
         };
     });
 
-    // fn_body?.children.forEach((e, i) => {
-    //     if (typeof e === "undefined") { return; }
-    //     if (e?.type !== "short_var_declaration") { return; }
-    //     const var_name = e.childForFieldName('left')?.text;
-    //     const var_content = e.childForFieldName('right');
-    //     const var_type = identifyType(var_content);
+    if (typeof fn_body?.children !== "undefined" && fn_body?.children.length !== 0) {
+        fn_body?.children.forEach((e, i) => {
+            if (typeof e === "undefined") { return; }
+            if (e?.type !== "short_var_declaration") { return; }
+            const var_name = e.childForFieldName('left')?.text;
+            const var_content = e.childForFieldName('right');
+            const var_type = identifyType(var_content);
+    
+            // locals[var_name as string] = {
+            //     type: var_type,
+            //     signature: buildTypeSignature(var_name as string, var_type)
+            // }
+        });
+    }
 
-    //     // console.log(var_type);
-
-    //     locals[var_name as string] = {
-    //         type: '',
-    //         signature: buildTypeSignature(var_name as string, '')
-    //     }
-    // });
-
-    typesmap[fn_name as string] = {
+    return [fn_name as string, {
         type: `function`,
         signature: buildFnSignature(node),
         comment: comment,
         parameters: params,
         locals
-    }
-
-    // console.log(locals);
+    }]
 }
 
 export function getCurrentModule(node: Parser.SyntaxNode): string {
@@ -205,7 +230,7 @@ export function getCurrentModule(node: Parser.SyntaxNode): string {
     return module_name;
 }
 
-export function declareStruct(node: Parser.SyntaxNode) {
+export function declareStruct(node: Parser.SyntaxNode): [string, TypeProperties] {
     const struct_name = findChildByType(node, "type_identifier")?.text as string;
     const declaration_list = findChildByType(node, "field_declaration_list")?.children;
 
@@ -224,14 +249,14 @@ export function declareStruct(node: Parser.SyntaxNode) {
 
     const dec = Object.keys(fields).map(f => fields[f].signature);
 
-    typesmap[struct_name] = {
+    return [struct_name, {
         type: 'struct',
         signature: buildTypeSignature(`${struct_name} {${dec.join(', ')}}`, 'struct'),
         fields
-    };
+    }];
 }
 
-export function declareVar(node: Parser.SyntaxNode) {
+export function declareVar(node: Parser.SyntaxNode): [string, TypeProperties] {
     const var_name = node.childForFieldName('left')?.text;
     const content = node.childForFieldName('right');
     const var_type = identifyType(content as SyntaxNode);
@@ -241,14 +266,14 @@ export function declareVar(node: Parser.SyntaxNode) {
         comment = buildComment(node);
     }
 
-    typesmap[var_name as string] = {
+    return [var_name as string, {
         type: var_type,
         signature: buildTypeSignature(var_name as string, var_type),
         comment: comment
-    }
+    }]
 }
 
-export function declareEnum(node: Parser.SyntaxNode) {
+export function declareEnum(node: Parser.SyntaxNode): [string, TypeProperties] {
     const enum_name = findChildByType(node, "type_identifier")?.text as string;
     const declaration_list = findChildByType(node, "enum_declaration_list")?.children;
 
@@ -265,9 +290,9 @@ export function declareEnum(node: Parser.SyntaxNode) {
 
     const dec = Object.keys(fields).map(f => fields[f].signature);
 
-    typesmap[enum_name] = {
+    return [enum_name, {
         type: 'enum',
         signature: buildTypeSignature(`${enum_name} {${dec.join(', ')}}`, 'enum'),
         fields
-    };
+    }];
 }

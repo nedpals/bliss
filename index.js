@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,12 +16,13 @@ const web_tree_sitter_1 = __importDefault(require("web-tree-sitter"));
 const imports_1 = __importDefault(require("./imports"));
 const trees_1 = require("./trees");
 const types_1 = require("./types");
-async function init() {
-    await web_tree_sitter_1.default.init();
-    const parser = new web_tree_sitter_1.default;
-    const v = await web_tree_sitter_1.default.Language.load(__dirname + '/src/tree-sitter-v.wasm');
-    parser.setLanguage(v);
-    const source = `
+function init() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield web_tree_sitter_1.default.init();
+        const parser = new web_tree_sitter_1.default;
+        const v = yield web_tree_sitter_1.default.Language.load(__dirname + '/src/tree-sitter-v.wasm');
+        parser.setLanguage(v);
+        const source = `
     module main
 
     import log
@@ -35,20 +45,19 @@ async function init() {
     // canledudebudebu
     // # Hello World!
     fn main() {
-        name := 'Ned'
-        println('Hello World!')
+        hello := Hello{}
+        woo := hello.world('hey')
     }
     `;
-    await trees_1.newTree({ filepath: 'Untitled-1', source }, parser);
-    await imports_1.default(trees_1.trees['Untitled-1'].rootNode, parser);
-    Object.keys(trees_1.trees).forEach(p => {
-        var _a;
-        const tree = trees_1.trees[p].rootNode;
-        (_a = tree.children) === null || _a === void 0 ? void 0 : _a.forEach(n => {
-            types_1.declare(n);
+        yield trees_1.newTree({ filepath: 'Untitled-1', source }, parser);
+        yield imports_1.default(trees_1.trees['Untitled-1'].rootNode, parser);
+        Object.keys(trees_1.trees).forEach(p => {
+            const tree = trees_1.trees[p].rootNode;
+            const moduleName = types_1.getCurrentModule(tree);
+            types_1.insertTypes(tree, moduleName);
         });
+        console.log(types_1.typesmap);
     });
-    console.log(types_1.typesmap);
 }
 init();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJzcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7QUFBQSxzRUFBcUM7QUFFckMsd0RBQTZDO0FBQzdDLG1DQUF5QztBQUN6QyxtQ0FBOEQ7QUFHOUQsS0FBSyxVQUFVLElBQUk7SUFFZixNQUFNLHlCQUFNLENBQUMsSUFBSSxFQUFFLENBQUM7SUFFcEIsTUFBTSxNQUFNLEdBQUcsSUFBSSx5QkFBTSxDQUFDO0lBQzFCLE1BQU0sQ0FBQyxHQUFHLE1BQU0seUJBQU0sQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLFNBQVMsR0FBRyx5QkFBeUIsQ0FBQyxDQUFDO0lBQzVFLE1BQU0sQ0FBQyxXQUFXLENBQUMsQ0FBQyxDQUFDLENBQUM7SUFFdEIsTUFBTSxNQUFNLEdBQUc7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0tBMEJkLENBQUM7SUFFRixNQUFNLGVBQU8sQ0FBQyxFQUFFLFFBQVEsRUFBRSxZQUFZLEVBQUUsTUFBTSxFQUFFLEVBQUUsTUFBTSxDQUFDLENBQUM7SUFDMUQsTUFBTSxpQkFBb0IsQ0FBQyxhQUFLLENBQUMsWUFBWSxDQUFDLENBQUMsUUFBUSxFQUFFLE1BQU0sQ0FBQyxDQUFDO0lBRWpFLE1BQU0sQ0FBQyxJQUFJLENBQUMsYUFBSyxDQUFDLENBQUMsT0FBTyxDQUFDLENBQUMsQ0FBQyxFQUFFOztRQUMzQixNQUFNLElBQUksR0FBRyxhQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsUUFBUSxDQUFDO1FBQy9CLE1BQUEsSUFBSSxDQUFDLFFBQVEsMENBQUUsT0FBTyxDQUFDLENBQUMsQ0FBQyxFQUFFO1lBQ3ZCLGVBQU8sQ0FBQyxDQUFDLENBQUMsQ0FBQztRQUVmLENBQUMsRUFBRTtJQUNQLENBQUMsQ0FBQyxDQUFDO0lBQ0gsT0FBTyxDQUFDLEdBQUcsQ0FBQyxnQkFBUSxDQUFDLENBQUM7QUFDMUIsQ0FBQztBQUNELElBQUksRUFBRSxDQUFDIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJzcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7QUFBQSxzRUFBcUM7QUFFckMsd0RBQTZDO0FBQzdDLG1DQUF5QztBQUN6QyxtQ0FBb0Y7QUFrQnBGLFNBQWUsSUFBSTs7UUFFZixNQUFNLHlCQUFNLENBQUMsSUFBSSxFQUFFLENBQUM7UUFFcEIsTUFBTSxNQUFNLEdBQUcsSUFBSSx5QkFBTSxDQUFDO1FBQzFCLE1BQU0sQ0FBQyxHQUFHLE1BQU0seUJBQU0sQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLFNBQVMsR0FBRyx5QkFBeUIsQ0FBQyxDQUFDO1FBQzVFLE1BQU0sQ0FBQyxXQUFXLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFFdEIsTUFBTSxNQUFNLEdBQUc7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0tBMEJkLENBQUM7UUFFRixNQUFNLGVBQU8sQ0FBQyxFQUFFLFFBQVEsRUFBRSxZQUFZLEVBQUUsTUFBTSxFQUFFLEVBQUUsTUFBTSxDQUFDLENBQUM7UUFDMUQsTUFBTSxpQkFBb0IsQ0FBQyxhQUFLLENBQUMsWUFBWSxDQUFDLENBQUMsUUFBUSxFQUFFLE1BQU0sQ0FBQyxDQUFDO1FBRWpFLE1BQU0sQ0FBQyxJQUFJLENBQUMsYUFBSyxDQUFDLENBQUMsT0FBTyxDQUFDLENBQUMsQ0FBQyxFQUFFO1lBQzNCLE1BQU0sSUFBSSxHQUFHLGFBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxRQUFRLENBQUM7WUFDL0IsTUFBTSxVQUFVLEdBQUcsd0JBQWdCLENBQUMsSUFBSSxDQUFDLENBQUM7WUFDMUMsbUJBQVcsQ0FBQyxJQUFJLEVBQUUsVUFBVSxDQUFDLENBQUM7UUFDbEMsQ0FBQyxDQUFDLENBQUM7UUFFSCxPQUFPLENBQUMsR0FBRyxDQUFDLGdCQUFRLENBQUMsQ0FBQztJQUMxQixDQUFDO0NBQUE7QUFDRCxJQUFJLEVBQUUsQ0FBQyJ9
