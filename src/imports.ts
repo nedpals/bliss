@@ -6,7 +6,7 @@ import { promisify } from "util";
 
 import { exc_os_suffix } from "./utils";
 import { newTree } from "./trees";
-import { Analyzer } from "./index";
+import { Analyzer } from "./analyzer";
 
 export type Module = string;
 export const cached_trees: { [key: string]: Parser.Tree } = {};
@@ -83,7 +83,7 @@ export class Importer {
                 const resolved_modnames = resolved_modules.map(r => r.name);
                 const moduleName = Analyzer.getCurrentModule(cached_trees[p].rootNode);
                 this.analyzer.typemap.setModuleName(moduleName);
-                await this.analyzer.typemap.insertType(cached_trees[p].rootNode);
+                await this.analyzer.typemap.insertTypeFromTree(cached_trees[p].rootNode);
     
                 resolved_modules = resolved_modules.concat(resolved.filter(r => !resolved_modnames.includes(r.name)));
             }

@@ -5,6 +5,7 @@ import { Module } from "./imports";
 export interface TypeProperties {
     type: string,
     signature: string,
+    range: { start: number[], end: number[] }
     comment?: string | null,
     fields?: TypeMap,
     module?: Module,
@@ -37,9 +38,9 @@ export class TypeMap {
         this.moduleName = name;
     }
 
-    insertType(root: Parser.SyntaxNode): void {
+    insertTypeFromTree(root: Parser.SyntaxNode): void {
         root.children?.forEach(async n => {
-            const [name, props] = await this.declare(n);
+            const [name, props] = await this.register(n);
             if (name.length >= 1 && typeof this.moduleName !== "undefined") {
                 props.module = this.moduleName;
                 this.types[this.moduleName === "main" ? name : `${this.moduleName}.${name}`] = props;
@@ -151,39 +152,44 @@ export class TypeMap {
         return type;
     }
 
-    declare(node: Parser.SyntaxNode | null): [string, TypeProperties] {    
+    register(node: Parser.SyntaxNode | null): [string, TypeProperties] {    
         switch (node?.type) {
             case 'type_declaration':
-                return this.declareTypedef(node);
+                return this.registerTypedef(node);
             case 'short_var_declaration':
-                return this.declareVar(node);
+                return this.registerVar(node);
             case 'struct_declaration':
-                return this.declareStruct(node);
+                return this.registerStruct(node);
             case 'enum_declaration':
-                return this.declareEnum(node);
+                return this.registerEnum(node);
             case 'method_declaration':
             case 'function_declaration':
-                return this.declareFunction(node);
+                return this.registerFunction(node);
             default:
                 return ['', {
                     signature: '',
                     type: '',
+                    range: { start: [], end: [] }
                 }]
         }
     }
 
-    declareTypedef(node: Parser.SyntaxNode): [string, TypeProperties] {
+    registerTypedef(node: Parser.SyntaxNode): [string, TypeProperties] {
         const spec = findChildByType(node, 'type_spec');
         const type_name = spec?.childForFieldName('name')?.text as string;
         const orig_type = this.identifyType(spec?.childForFieldName('type') as SyntaxNode);
     
         return [type_name as string, {
             type: orig_type,
-            signature: buildTypeSignature(`(alias) ${type_name}`, orig_type)
+            signature: buildTypeSignature(`(alias) ${type_name}`, orig_type),
+            range: { 
+                start: [node.startPosition.column+1, node.startPosition.row+1],
+                end: [node.endPosition.column+1, node.endPosition.row+1]
+            }
         }]
     }
     
-    declareFunction(node: Parser.SyntaxNode): [string, TypeProperties] {
+    registerFunction(node: Parser.SyntaxNode): [string, TypeProperties] {
         const fn_receiver = node.childForFieldName('receiver');
         const fn_name = node.childForFieldName('name')?.text;
         const declaration_list = node.childForFieldName('parameters')?.children;
@@ -205,7 +211,11 @@ export class TypeMap {
     
             params.set(param_name, {
                 type: param_type,
-                signature: buildTypeSignature(param_name as string, param_type)
+                signature: buildTypeSignature(param_name as string, param_type),
+                range: { 
+                    start: [pd.startPosition.column+1, pd.startPosition.row+1],
+                    end: [pd.endPosition.column+1, pd.endPosition.row+1]
+                }
             });
         });
     
@@ -224,7 +234,11 @@ export class TypeMap {
                 // }
                 locals.set(var_name as string, {
                     type: var_type,
-                    signature: buildTypeSignature(var_name as string, var_type)
+                    signature: buildTypeSignature(var_name as string, var_type),
+                    range: { 
+                        start: [e.startPosition.column+1, e.startPosition.row+1],
+                        end: [e.endPosition.column+1, e.endPosition.row+1]
+                    }
                 })
             });
         }
@@ -248,7 +262,11 @@ export class TypeMap {
                     signature: buildFnSignature(node),
                     comment: comment,
                     parameters: params,
-                    locals
+                    locals,
+                    range: { 
+                        start: [(receiver_decl_list as Parser.SyntaxNode).startPosition.column+1, (receiver_decl_list as Parser.SyntaxNode).startPosition.row+1],
+                        end: [(receiver_decl_list as Parser.SyntaxNode).endPosition.column+1, (receiver_decl_list as Parser.SyntaxNode).endPosition.row+1]
+                    }
                 });
 
             }
@@ -259,11 +277,15 @@ export class TypeMap {
             signature: buildFnSignature(node),
             comment: comment,
             parameters: params,
-            locals
+            locals,
+            range: { 
+                start: [node.startPosition.column+1, node.startPosition.row+1],
+                end: [node.endPosition.column+1, node.endPosition.row+1]
+            }
         }];
     }
     
-    declareStruct(node: Parser.SyntaxNode): [string, TypeProperties] {
+    registerStruct(node: Parser.SyntaxNode): [string, TypeProperties] {
         const struct_name = findChildByType(node, "type_identifier")?.text as string;
         const declaration_list = findChildByType(node, "field_declaration_list")?.children;
     
@@ -277,7 +299,11 @@ export class TypeMap {
     
             fields.set(field_name, {
                 type: field_type,
-                signature: buildTypeSignature(field_name, field_type)
+                signature: buildTypeSignature(field_name, field_type),
+                range: { 
+                    start: [fd.startPosition.column+1, fd.startPosition.row+1],
+                    end: [fd.endPosition.column+1, fd.endPosition.row+1]
+                }
             });
         });
     
@@ -287,11 +313,15 @@ export class TypeMap {
             type: 'struct',
             signature: buildTypeSignature(`${struct_name} {${dec.join(', ')}}`, 'struct'),
             fields,
-            methods
+            methods,
+            range: { 
+                start: [node.startPosition.column+1, node.startPosition.row+1],
+                end: [node.endPosition.column+1, node.endPosition.row+1]
+            }
         }];
     }
     
-    declareVar(node: Parser.SyntaxNode): [string, TypeProperties] {
+    registerVar(node: Parser.SyntaxNode): [string, TypeProperties] {
         const var_name = node.childForFieldName('left')?.text;
         const content = node.childForFieldName('right');
         const var_type = this.identifyType(content as SyntaxNode);
@@ -304,11 +334,15 @@ export class TypeMap {
         return [var_name as string, {
             type: var_type,
             signature: buildTypeSignature(var_name as string, var_type),
-            comment: comment
+            comment: comment,
+            range: { 
+                start: [node.startPosition.column+1, node.startPosition.row+1],
+                end: [node.endPosition.column+1, node.endPosition.row+1]
+            }
         }]
     }
     
-    declareEnum(node: Parser.SyntaxNode): [string, TypeProperties] {
+    registerEnum(node: Parser.SyntaxNode): [string, TypeProperties] {
         const enum_name = findChildByType(node, "type_identifier")?.text as string;
         const declaration_list = findChildByType(node, "enum_declaration_list")?.children;
     
@@ -319,7 +353,11 @@ export class TypeMap {
     
             fields.set(field_name, {
                 type: 'int',
-                signature: buildTypeSignature(field_name, 'int')
+                signature: buildTypeSignature(field_name, 'int'),
+                range: { 
+                    start: [fd.startPosition.column+1, fd.startPosition.row+1],
+                    end: [fd.endPosition.column+1, fd.endPosition.row+1]
+                }
             });
         });
     
@@ -328,7 +366,11 @@ export class TypeMap {
         return [enum_name, {
             type: 'enum',
             signature: buildTypeSignature(`${enum_name} {${dec.join(', ')}}`, 'enum'),
-            fields
+            fields,
+            range: { 
+                start: [node.startPosition.column+1, node.startPosition.row+1],
+                end: [node.endPosition.column+1, node.endPosition.row+1]
+            }
         }];
     }
 }
