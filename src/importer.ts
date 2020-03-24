@@ -5,8 +5,8 @@ import * as path from "path";
 import { promisify } from "util";
 
 import { excludedOSSuffixes } from "./utils";
-import { newTree, trees } from "./trees";
 import { Analyzer } from "./analyzer";
+import which from "which";
 
 export type Module = string;
 export const cached_trees: { [key: string]: Parser.Tree } = {};
@@ -45,8 +45,9 @@ export class Importer {
     static async resolveModulePath(moduleName: Module, excludeOSSuffixes: boolean = true): Promise<string[]> {
         let resolved: string[] = [];
         const _module = moduleName.replace('.', '\\');
+        const vPath = await which('v');
         const importModulePaths = [
-            String.raw`C:\Users\admin\Documents\Coding\v\vlib`,
+            path.join(path.dirname(vPath), 'vlib'),
             process.cwd(),
             path.join(process.cwd(), 'modules'),
             path.join(homedir(), '.vmodules')
