@@ -10,6 +10,7 @@
     "@types/glob": "^7.1.1",
     "@types/node": "^13.5.0",
     "glob": "^7.1.6",
+    "tree-sitter-v": "^1.0.3",
     "web-tree-sitter": "^0.16.0"
   },
   "devDependencies": {

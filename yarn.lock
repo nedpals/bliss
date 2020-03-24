@@ -22,9 +22,9 @@
   integrity sha512-tHq6qdbT9U1IRSGf14CL0pUlULksvY9OZ+5eEgl1N7t+OA3tGvNpxJCzuKQlsNgCVwbAs670L1vcVQi8j9HjnA==
 
 "@types/node@*", "@types/node@^13.5.0":
-  version "13.5.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.5.0.tgz#4e498dbf355795a611a87ae5ef811a8660d42662"
-  integrity sha512-Onhn+z72D2O2Pb2ql2xukJ55rglumsVo1H6Fmyi8mlU9SvKdBk/pUSUAiBY/d9bAOF7VVWajX3sths/+g6ZiAQ==
+  version "13.9.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.9.3.tgz#6356df2647de9eac569f9a52eda3480fa9e70b4d"
+  integrity sha512-01s+ac4qerwd6RHD+mVbOEsraDHSgUaefQlEdBbUolnQFjKwCr7luvAlEwW1RFojh67u0z4OUTjPn9LEl4zIkA==
 
 balanced-match@^1.0.0:
   version "1.0.0"
@@ -81,6 +81,11 @@ minimatch@^3.0.4:
   dependencies:
     brace-expansion "^1.1.7"
 
+nan@^2.14.0:
+  version "2.14.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.0.tgz#7818f722027b2459a86f0295d434d1fc2336c52c"
+  integrity sha512-INOFj37C7k3AfaNTtX8RhsTw7qRy7eLET14cROi9+5HAVbbHuIWUHEauBv5qT4Av2tWasiTY1Jw6puUNqRJXQg==
+
 once@^1.3.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/once/-/once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1"
@@ -93,15 +98,22 @@ path-is-absolute@^1.0.0:
   resolved "https://registry.yarnpkg.com/path-is-absolute/-/path-is-absolute-1.0.1.tgz#174b9268735534ffbc7ace6bf53a5a9e1b5c5f5f"
   integrity sha1-F0uSaHNVNP+8es5r9TpanhtcX18=
 
+tree-sitter-v@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/tree-sitter-v/-/tree-sitter-v-1.0.3.tgz#dcb86b5d8e47e18d12d111920dcd77f14c55f36a"
+  integrity sha512-GcqANb39lecgixhrfX6cZWRtD3JEmAHaNxtDyPlw08ld1OV0cuoR65aFzXaaVQFgU84UOVDcx6PFQbG0TA94Tw==
+  dependencies:
+    nan "^2.14.0"
+
 typescript@^3.7.5:
-  version "3.7.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.5.tgz#0692e21f65fd4108b9330238aac11dd2e177a1ae"
-  integrity sha512-/P5lkRXkWHNAbcJIiHPfRoKqyd7bsyCma1hZNUGfn20qm64T6ZBlrzprymeu918H+mB/0rIg2gGK/BXkhhYgBw==
+  version "3.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.8.3.tgz#409eb8544ea0335711205869ec458ab109ee1061"
+  integrity sha512-MYlEfn5VrLNsgudQTVJeNaQFUAI7DkhnOjdpAp4T+ku1TfQClewlbSuTVHiA+8skNBgaf02TL/kLOvig4y3G8w==
 
 web-tree-sitter@^0.16.0:
-  version "0.16.0"
-  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.16.0.tgz#629579b1bc44dd4264df311b9e0abfdc87fb8e27"
-  integrity sha512-ETAt+Nf9KUc6bvE8waKVpEJir9F+L80//IUyOd5/nvF+1HLb+3QoZpyOW2R1ywEaXMGOer7tOtTZfyCIR2qGzA==
+  version "0.16.2"
+  resolved "https://registry.yarnpkg.com/web-tree-sitter/-/web-tree-sitter-0.16.2.tgz#fc6b62681d7ca524a9ffc8498448f8e23be7b1ea"
+  integrity sha512-vxZHqu4nItCARmE+oGvTgjFBrMbhEuGI9PWYSgF4ET/nLuW3K11KQQIVhAsoGtYvTI9jdbjc/THj38P7nhYwow==
 
 wrappy@1:
   version "1.0.2"
