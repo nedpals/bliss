@@ -53,13 +53,13 @@ export class Importer {
         ];
 
         for (let p of importModulePaths) {
-            console.log('[resolveModulePath] Checking from ' + p);
             if (resolved.length != 0) { break; }
+            // console.log('[resolveModulePath] Checking from ' + p);
 
-            let excludedFiles = `!(*_test).v`;
+            let excludedFiles = `!(*_test|*_js|${excludedOSSuffixes.map(o => '*' + o).join('|')}).v`;
 
-            if (excludeOSSuffixes) {
-                excludedFiles = `!(*_test|${excludedOSSuffixes.map(o => '*' + o).join('|')}).v`;
+            if (!excludeOSSuffixes) {
+                excludedFiles = `!(*_test|*_js).v`;
             }
 
             const modulePath = path.join(p, `@(${_module})`, excludedFiles);
