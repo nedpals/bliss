@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --outDir ./dist --project tsconfig.json"
+    "build": "tsc --outDir ./dist --project tsconfig.json",
+    "watch": "tsc --watch --outDir ./dist --project tsconfig.json"
   },
   "dependencies": {
     "@types/glob": "^7.1.1",
