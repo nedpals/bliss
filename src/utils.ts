@@ -1,6 +1,6 @@
 import { platform } from "process";
 
-export const os_suffix: string[] = (() => {
+export const osSuffixes: string[] = (() => {
     let included: string[] = [];
 
     switch (platform) {
@@ -28,4 +28,10 @@ export const os_suffix: string[] = (() => {
     return included;
 })();
 
-export const exc_os_suffix: string[] = ['_win', '_windows', '_nix', '_lin', '_linux', '_mac', '_darwin', '_bsd', '_freebsd', '_solaris', '_haiku'].filter(s => !os_suffix.includes(s));
+export const excludedOSSuffixes: string[] = [
+    '_win', '_windows', '_nix', 
+    '_lin', '_linux', 
+    '_mac', '_darwin', 
+    '_bsd', '_freebsd', 
+    '_solaris', '_haiku'
+].filter(s => !osSuffixes.includes(s));
