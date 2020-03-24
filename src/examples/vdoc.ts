@@ -3,6 +3,7 @@ import Parser from "web-tree-sitter";
 import { basename, join as path_join } from "path";
 import fs from "fs";
 import { buildComment, buildFnSignature } from '../signatures';
+import { Importer } from '../importer';
 
 async function vdoc() {
     let analyzer;
@@ -13,13 +14,21 @@ async function vdoc() {
         console.log(e);
     } finally {
         analyzer = await Analyzer.create();
-        const filepath = String.raw`C:\Users\admin\Documents\Coding\v\vlib\os\os.v`;
+        const filepath = String.raw`C:\Users\admin\Documents\Coding\v\vlib\sqlite\sqlite.v`;
         await analyzer.open(filepath);
 
         const t = await analyzer.getTypeList(filepath, { modules: false });
+        const modulePaths = await Importer.resolveModulePath(filepath, false);
         const fileContents: string[] = [];
         
-        fileContents.push(`# ${basename(filepath)}\n## Contents`);
+        fileContents.push(`# ${basename(filepath)}`);
+        
+        for (let file of modulePaths) {
+            fileContents.push(`- ${file}`);
+        }
+
+        fileContents.push(`## Contents`);
+
         let modules = Object.keys(t);
 
         for (let mod of modules) {
@@ -69,7 +78,7 @@ async function vdoc() {
             }
         }
 
-        fs.writeFileSync(path_join(process.cwd(), 'vdoc-os.md'), fileContents.join('\n'), { encoding: 'utf-8' });
+        fs.writeFileSync(path_join(process.cwd(), 'vdoc-sqlite.md'), fileContents.join('\n'), { encoding: 'utf-8' });
     }
 }
 
