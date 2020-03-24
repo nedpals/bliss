@@ -1,30 +1,20 @@
 import Parser from "web-tree-sitter";
+import * as fs from "fs";
 import * as path from "path";
-
-import { Importer } from "./imports";
+import { Importer } from "./importer";
 import { newTree, trees } from "./trees";
-import { TypeMap, filterChildrenByType, TypeProperties } from "./types";
+import { filterChildrenByType, TypeMap, Types } from "./types";
 import { SymbolKind } from "./symbols";
-
-interface IAnalyzer {
-    filename: string,
-    name: string,
-    modules: string[]
-}
-
-interface AnalyzedFiles {
-    [paths: string]: IAnalyzer
-}
+import { promisify } from "util";
 
 export class Analyzer {
-    parser: Parser = new Parser;
-    typemap: TypeMap = new TypeMap('');
-    files: AnalyzedFiles = {};
-    trees: { [path: string]: Parser.Tree } = {};
-    importer: Importer = new Importer(this);
+    parser!: Parser;
+    importer: Importer = new Importer();
 
     async init(): Promise<void> {
-        const v = await Parser.Language.load(path.join(__dirname, '..', '/src/tree-sitter-v.wasm'));
+        this.parser = new Parser();
+        const parserPath = require.resolve('tree-sitter-v/wasm/tree-sitter-v.wasm');
+        const v = await Parser.Language.load(parserPath);
         this.parser.setLanguage(v);
     };
 
@@ -35,8 +25,8 @@ export class Analyzer {
         return an;
     }
 
-    static getCurrentModule(node: Parser.SyntaxNode): string {
-        const module_clause = filterChildrenByType(node, 'module_clause');
+    static getCurrentModule(rootNode: Parser.SyntaxNode): string {
+        const module_clause = filterChildrenByType(rootNode, 'module_clause');
         if (typeof module_clause === "undefined") { return 'main'; }
     
         //@ts-ignore
@@ -44,42 +34,73 @@ export class Analyzer {
         return module_name;
     }
 
-    async open(filename: string, source: string): Promise<number> {
-        await newTree({ filepath: filename, source }, this.parser);
-        await this.importer.getAndResolve(trees[filename].rootNode, this.parser);
-    
-        Object.keys(trees).forEach(p => {
-            const tree = trees[p].rootNode;
-            const moduleName = Analyzer.getCurrentModule(tree);
-            this.typemap.setModuleName(moduleName);
-            this.typemap.insertTypeFromTree(tree);
-        });
-    
-        return -1;
+    async open(filepath: string, source?: string): Promise<void> {
+        const _source = typeof source == "undefined" ? await promisify(fs.readFile)(filepath, { encoding: 'utf-8' }) : source;
+
+        try {
+            await newTree({ filepath, source: _source }, this.parser);
+            await this.importer.getAndResolve(filepath, this);
+        } catch(e) {
+            console.log(e);
+        }
     }
 
-    async generateSymbols(filename: string): Promise<{[x: string]: any}[]> {
-        const tree = trees[filename].rootNode;
-        const typemap = new TypeMap(Analyzer.getCurrentModule(tree));
-        
-        typemap.insertTypeFromTree(tree);
+    async update(filepath: string, source: string) {
+        // TODO: Update tree function
+        // function updateTree(parser: Parser, edit: vscode.TextDocumentChangeEvent) {
+        //     if (edit.contentChanges.length == 0) return
+        //     const old = trees[edit.document.uri.toString()]
+        //     for (const e of edit.contentChanges) {
+        //         const startIndex = e.rangeOffset
+        //         const oldEndIndex = e.rangeOffset + e.rangeLength
+        //         const newEndIndex = e.rangeOffset + e.text.length
+        //         const startPos = edit.document.positionAt(startIndex)
+        //         const oldEndPos = edit.document.positionAt(oldEndIndex)
+        //         const newEndPos = edit.document.positionAt(newEndIndex)
+        //         const startPosition = asPoint(startPos)
+        //         const oldEndPosition = asPoint(oldEndPos)
+        //         const newEndPosition = asPoint(newEndPos)
+        //         const delta = {startIndex, oldEndIndex, newEndIndex, startPosition, oldEndPosition, newEndPosition}
+        //         old.edit(delta)
+        //     }
+        //     const t = parser.parse(edit.document.getText(), old) // TODO don't use getText, use Parser.Input
+        //     trees[edit.document.uri.toString()] = t
+        // }
+    }
 
-        return Object.keys(typemap.getAll()).map(id => {
-            const type: TypeProperties = typemap.get(id);
+    async getTypeList(filepath: string, options = { modules: true }): Promise<Types> {
+        let generatedTypes: Types = {};
 
-            return {
-                name: id,
-                detail: type.signature,
-                kind: SymbolKind.Variable,
-                range: { 
-                    start: { line: type.range.start[0], character: type.range.start[1] },
-                    end: { line: type.range.end[0], character: type.range.end[1] },
-                },
-                selectionRange: { 
-                    start: { line: type.range.start[0], character: type.range.start[1] },
-                    end: { line: type.range.end[0], character: type.range.end[1] },
+        const parsedPath = path.parse(filepath);
+        const tree = trees[parsedPath.dir][parsedPath.base];
+        const moduleName = Analyzer.getCurrentModule(tree.rootNode);
+        let typemap: TypeMap = new TypeMap(filepath, tree.rootNode);
+
+        if (options.modules) {
+            for (let mod of this.importer.depGraph[moduleName].dependencies) {
+                console.log('[getTypeList] Getting type information for module "' + mod + '"...');
+                const modFiles = this.importer.depGraph[mod].files;
+                
+                for (let modFilepath of modFiles) {
+                    console.log('[getTypeList] Getting types on "' + modFilepath + '"...');
+    
+                    const parsedModPath = path.parse(modFilepath);
+                    const modTree = trees[parsedModPath.dir][parsedModPath.base];
+                    let modTypemap = new TypeMap(modFilepath, modTree.rootNode);
+    
+                    generatedTypes = {
+                        ...generatedTypes,
+                        ...modTypemap.generate()
+                    };
                 }
             }
-        });
+        }
+
+        generatedTypes = {
+            ...generatedTypes,
+            ...typemap.generate()
+        };
+
+        return generatedTypes;
     }
 }
