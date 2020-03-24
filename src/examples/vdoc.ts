@@ -14,17 +14,17 @@ async function vdoc() {
         console.log(e);
     } finally {
         analyzer = await Analyzer.create();
-        const filepath = String.raw`C:\Users\admin\Documents\Coding\v\vlib\sqlite\sqlite.v`;
+        const filepath = String.raw`C:\Users\admin\Documents\Coding\v\vlib\os\os.v`;
         await analyzer.open(filepath);
 
+        let modulePaths = await Importer.resolveModulePath(Analyzer.getCurrentModule(analyzer.getTree(filepath).rootNode));
         const t = await analyzer.getTypeList(filepath, { modules: false });
-        const modulePaths = await Importer.resolveModulePath(filepath, false);
         const fileContents: string[] = [];
-        
+
         fileContents.push(`# ${basename(filepath)}`);
         
         for (let file of modulePaths) {
-            fileContents.push(`- ${file}`);
+            fileContents.push(`- ${basename(file)}`);
         }
 
         fileContents.push(`## Contents`);
@@ -33,7 +33,7 @@ async function vdoc() {
 
         for (let mod of modules) {
             for (let type of Object.keys(t[mod])) {
-                if (type.includes('~') || type.startsWith('C.')) { continue; }
+                if ((type.includes('~') || type.startsWith('C.')) || (t[mod][type].parent?.name.startsWith('C.') || (t[mod][type].type != 'function' && typeof t[mod][type].parent != "undefined"))) { continue; }
                 const linkName = mod + '.' + type;
 
                 fileContents.push(`- [${linkName}](#${linkName})`);
@@ -78,7 +78,7 @@ async function vdoc() {
             }
         }
 
-        fs.writeFileSync(path_join(process.cwd(), 'vdoc-sqlite.md'), fileContents.join('\n'), { encoding: 'utf-8' });
+        fs.writeFileSync(path_join(process.cwd(), 'vdoc-examples', 'vdoc-os.md'), fileContents.join('\n'), { encoding: 'utf-8' });
     }
 }
 
