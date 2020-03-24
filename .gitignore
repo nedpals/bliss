@@ -106,3 +106,5 @@ typings/
 .vscode-test
 
 out/
+
+dist/
