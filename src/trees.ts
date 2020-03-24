@@ -3,21 +3,26 @@ import * as path from "path";
 import * as fs from "fs";
 import { promisify } from "util";
 
-export const trees: { [key: string]: Parser.Tree } = {};
+interface ParsedFiles {
+    [base_paths: string]: {
+        [filename: string]: Parser.Tree
+    }
+}
 
-export async function newTree(options: { 'filepath': string, 'source'?: string, 'tree'?: { [x: string]: Parser.Tree } }, parser: Parser) {
+export const trees: ParsedFiles = {};
+export async function newTree(options: { 'filepath': string, 'source': string, 'trees'?: ParsedFiles }, parser: Parser) {
     let tree;
-
-    if (typeof options.filepath !== "undefined" && typeof options.source === "undefined") {
-        const source = await promisify(fs.readFile)(path.resolve(options.filepath), { encoding: 'utf-8' });
-        tree = parser.parse(source);
-    } else {
-        if (typeof options.source !== "undefined") {
-            tree = parser.parse(options.source);
-        }
+    const parsedPath = path.parse(options.filepath);
+    
+    if (typeof options.source != "undefined") {
+        tree = parser.parse(options.source);
     }
 
     if (typeof tree !== "undefined") {
-        (options.tree || trees)[options.filepath] = tree;
+        if (Object.keys(options.trees || trees).indexOf(parsedPath.dir) == -1) {
+            (options.trees || trees)[parsedPath.dir] = {};
+        }
+
+        (options.trees || trees)[parsedPath.dir][parsedPath.base] = tree;
     }
 }
