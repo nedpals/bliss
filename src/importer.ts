@@ -42,7 +42,7 @@ export class Importer {
         return modules;
     }
 
-    static async resolveModulePath(moduleName: Module): Promise<string[]> {
+    static async resolveModulePath(moduleName: Module, excludeOSSuffixes: boolean = true): Promise<string[]> {
         let resolved: string[] = [];
         const _module = moduleName.replace('.', '\\');
         const importModulePaths = [
@@ -56,7 +56,13 @@ export class Importer {
             console.log('[resolveModulePath] Checking from ' + p);
             if (resolved.length != 0) { break; }
 
-            const modulePath = path.join(p, `@(${_module})`, `!(*_test|${excludedOSSuffixes.map(o => '*' + o).join('|')}).v`);
+            let excludedFiles = `!(*_test).v`;
+
+            if (excludeOSSuffixes) {
+                excludedFiles = `!(*_test|${excludedOSSuffixes.map(o => '*' + o).join('|')}).v`;
+            }
+
+            const modulePath = path.join(p, `@(${_module})`, excludedFiles);
             const matchedPaths = await promisify(glob)(modulePath);
 
             if (matchedPaths.length >= 1) {
