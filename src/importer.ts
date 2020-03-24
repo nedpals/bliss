@@ -77,7 +77,7 @@ export class Importer {
     async import(modules: Module[], analyzer: Analyzer): Promise<void> {    
         for (let m of modules) {
             
-            console.log('[import] Importing module ' + m + '...');
+            // console.log('[import] Importing module ' + m + '...');
 
             // Skip if it already present.
             if (typeof this.depGraph[m] !== "undefined") { 
@@ -90,14 +90,14 @@ export class Importer {
             // Stop here if there are no modules found.
             if (resolvedPaths.length == 0) { 
                 
-                console.log(`[import] Module ${m}: not found.`);
+                // console.log(`[import] Module ${m}: not found.`);
                 continue;
             }
 
             // Use `analyzer.open` for resolving dependencies.
             for (let file of resolvedPaths) {
                 
-                console.log('[import] Opening file ' + file);
+                // console.log('[import] Opening file ' + file);
                 
                 if (typeof this.depGraph[m] == "undefined" || this.depGraph[m].files.indexOf(file) == -1) {
                     await analyzer.open(file);

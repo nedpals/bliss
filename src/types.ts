@@ -139,7 +139,7 @@ export class TypeMap {
             case 'call_expression':
                 const fn_name = node?.childForFieldName('function');
                 const _fnn = fn_name?.text as string;
-                // console.log(fn_name?.startIndex + ': ' + fn_name?.type);
+                // // console.log(fn_name?.startIndex + ': ' + fn_name?.type);
                 if (fn_name?.type === "selector_expression") {
                     type = this.identifyType(fn_name);
                 } else {
@@ -169,7 +169,7 @@ export class TypeMap {
                 let f_name = node?.childForFieldName('field')?.text as string;
                 //@ts-ignore
                 // type = typesmap[s_name].fields[f_name] || 'undefined';
-                // console.log(s_name + ': ' + f_name);
+                // // console.log(s_name + ': ' + f_name);
                 type = 'void';
                 break;
             case 'false':
@@ -334,7 +334,7 @@ export class TypeMap {
             // const structFieldType = this.identifyType(fd.childForFieldName('type') as Parser.SyntaxNode);
             const structFieldType = fd.childForFieldName('type')?.text as string;
             if (typeof name === "undefined") { continue; }
-            // console.log('[parseStructFields] parent of field '+ name +' is ' + pType.props.name);
+            // // console.log('[parseStructFields] parent of field '+ name +' is ' + pType.props.name);
             name = pType.name + '.' + name;
 
             const props: TypeProperties = {

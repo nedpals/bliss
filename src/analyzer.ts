@@ -85,11 +85,11 @@ export class Analyzer {
 
         if (options.modules) {
             for (let mod of this.importer.depGraph[moduleName].dependencies) {
-                console.log('[getTypeList] Getting type information for module "' + mod + '"...');
+                // console.log('[getTypeList] Getting type information for module "' + mod + '"...');
                 const modFiles = this.importer.depGraph[mod].files;
                 
                 for (let modFilepath of modFiles) {
-                    console.log('[getTypeList] Getting types on "' + modFilepath + '"...');
+                    // console.log('[getTypeList] Getting types on "' + modFilepath + '"...');
     
                     const parsedModPath = path.parse(modFilepath);
                     const modTree = this.trees[parsedModPath.dir][parsedModPath.base];
