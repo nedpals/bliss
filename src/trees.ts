@@ -1,9 +1,7 @@
 import Parser from "web-tree-sitter";
 import * as path from "path";
-import * as fs from "fs";
-import { promisify } from "util";
 
-interface ParsedFiles {
+export interface ParsedFiles {
     [base_paths: string]: {
         [filename: string]: Parser.Tree
     }

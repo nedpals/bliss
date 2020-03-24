@@ -110,7 +110,7 @@ export class Importer {
         const parsedPath = path.parse(filepath);
 
         // Get the tree
-        const tree = trees[parsedPath.dir][parsedPath.base];
+        const tree = analyzer.trees[parsedPath.dir][parsedPath.base];
 
         // Get the root node of the tree.
         const rootNode = tree.rootNode;

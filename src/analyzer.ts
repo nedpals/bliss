@@ -2,7 +2,7 @@ import Parser from "web-tree-sitter";
 import * as fs from "fs";
 import * as path from "path";
 import { Importer } from "./importer";
-import { newTree, trees } from "./trees";
+import { newTree, ParsedFiles } from "./trees";
 import { filterChildrenByType, TypeMap, Types } from "./types";
 import { SymbolKind } from "./symbols";
 import { promisify } from "util";
@@ -10,6 +10,7 @@ import { promisify } from "util";
 export class Analyzer {
     parser!: Parser;
     importer: Importer = new Importer();
+    trees: ParsedFiles = {};
 
     async init(): Promise<void> {
         this.parser = new Parser();
@@ -25,6 +26,12 @@ export class Analyzer {
         return an;
     }
 
+    getTree(filepath: string): Parser.Tree {
+        const parsedPath = path.parse(filepath);
+
+        return this.trees[parsedPath.dir][parsedPath.base];
+    }
+
     static getCurrentModule(rootNode: Parser.SyntaxNode): string {
         const module_clause = filterChildrenByType(rootNode, 'module_clause');
         if (typeof module_clause === "undefined") { return 'main'; }
@@ -38,7 +45,7 @@ export class Analyzer {
         const _source = typeof source == "undefined" ? await promisify(fs.readFile)(filepath, { encoding: 'utf-8' }) : source;
 
         try {
-            await newTree({ filepath, source: _source }, this.parser);
+            await newTree({ filepath, source: _source, trees: this.trees }, this.parser);
             await this.importer.getAndResolve(filepath, this);
         } catch(e) {
             console.log(e);
@@ -72,7 +79,7 @@ export class Analyzer {
         let generatedTypes: Types = {};
 
         const parsedPath = path.parse(filepath);
-        const tree = trees[parsedPath.dir][parsedPath.base];
+        const tree = this.trees[parsedPath.dir][parsedPath.base];
         const moduleName = Analyzer.getCurrentModule(tree.rootNode);
         let typemap: TypeMap = new TypeMap(filepath, tree.rootNode);
 
@@ -85,7 +92,7 @@ export class Analyzer {
                     console.log('[getTypeList] Getting types on "' + modFilepath + '"...');
     
                     const parsedModPath = path.parse(modFilepath);
-                    const modTree = trees[parsedModPath.dir][parsedModPath.base];
+                    const modTree = this.trees[parsedModPath.dir][parsedModPath.base];
                     let modTypemap = new TypeMap(modFilepath, modTree.rootNode);
     
                     generatedTypes = {
