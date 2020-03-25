@@ -2,14 +2,14 @@
 - readline_windows.v
 - readline.v
 ## Contents
-- [readline.Termios](#readline.Termios)
-- [readline.Winsize](#readline.Winsize)
-- [readline.Readline](#readline.Readline)
+- [readline.Termios](#readlinetermios)
+- [readline.Winsize](#readlinewinsize)
+- [readline.Readline](#readlinereadline)
 
 ## Documentation
 ### readline.Termios
 ```v
-struct Termios {
+pub struct Termios {
     c_iflag  int
     c_oflag  int
     c_cflag  int
@@ -22,7 +22,7 @@ Used to change the terminal options
 
 ### readline.Winsize
 ```v
-struct Winsize {
+pub struct Winsize {
     ws_row  u16
     ws_col  u16
     ws_xpixel  u16
@@ -34,7 +34,7 @@ Used to collect the screen information
 
 ### readline.Readline
 ```v
-struct Readline {
+pub struct Readline {
     is_raw  bool
     orig_termios  Termios
     current  ustring

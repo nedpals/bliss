@@ -1,25 +1,25 @@
 # sqlite.v
 - sqlite.v
 ## Contents
-- [sqlite.DB](#sqlite.DB)
-- [sqlite.Row](#sqlite.Row)
-- [sqlite.connect](#sqlite.connect)
-- [sqlite.DB.q_int](#sqlite.DB.q_int)
-- [sqlite.DB.q_string](#sqlite.DB.q_string)
-- [sqlite.DB.exec](#sqlite.DB.exec)
-- [sqlite.DB.exec_one](#sqlite.DB.exec_one)
-- [sqlite.DB.exec_none](#sqlite.DB.exec_none)
+- [sqlite.DB](#sqlitedb)
+- [sqlite.Row](#sqliterow)
+- [sqlite.connect](#sqliteconnect)
+- [sqlite.DB.q_int](#sqlitedbq_int)
+- [sqlite.DB.q_string](#sqlitedbq_string)
+- [sqlite.DB.exec](#sqlitedbexec)
+- [sqlite.DB.exec_one](#sqlitedbexec_one)
+- [sqlite.DB.exec_none](#sqlitedbexec_none)
 
 ## Documentation
 ### sqlite.DB
 ```v
-struct DB {
+pub struct DB {
     conn  &C.sqlite3
 }
 ```
 ### sqlite.Row
 ```v
-struct Row {
+pub struct Row {
     vals  []string
 }
 ```

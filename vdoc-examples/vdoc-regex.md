@@ -1,55 +1,55 @@
 # regex.v
 - regex.v
 ## Contents
-- [regex.utf8util_char_len](#regex.utf8util_char_len)
-- [regex.RE.get_char](#regex.RE.get_char)
-- [regex.RE.get_charb](#regex.RE.get_charb)
-- [regex.is_alnum](#regex.is_alnum)
-- [regex.is_not_alnum](#regex.is_not_alnum)
-- [regex.is_space](#regex.is_space)
-- [regex.is_not_space](#regex.is_not_space)
-- [regex.is_digit](#regex.is_digit)
-- [regex.is_not_digit](#regex.is_not_digit)
-- [regex.is_wordchar](#regex.is_wordchar)
-- [regex.is_not_wordchar](#regex.is_not_wordchar)
-- [regex.is_lower](#regex.is_lower)
-- [regex.is_upper](#regex.is_upper)
-- [regex.RE.get_parse_error_string](#regex.RE.get_parse_error_string)
-- [regex.utf8_str](#regex.utf8_str)
-- [regex.simple_log](#regex.simple_log)
-- [regex.Token](#regex.Token)
-- [regex.Token.reset](#regex.Token.reset)
-- [regex.StateDotObj](#regex.StateDotObj)
-- [regex.RE](#regex.RE)
-- [regex.RE.reset](#regex.RE.reset)
-- [regex.RE.reset_src](#regex.RE.reset_src)
-- [regex.RE.get_group](#regex.RE.get_group)
-- [regex.BslsStruct](#regex.BslsStruct)
-- [regex.BSLS_parse_state](#regex.BSLS_parse_state)
-- [regex.RE.parse_bsls](#regex.RE.parse_bsls)
-- [regex.CharClass](#regex.CharClass)
-- [regex.CharClass_parse_state](#regex.CharClass_parse_state)
-- [regex.RE.get_char_class](#regex.RE.get_char_class)
-- [regex.RE.check_char_class](#regex.RE.check_char_class)
-- [regex.RE.parse_char_class](#regex.RE.parse_char_class)
-- [regex.Quant_parse_state](#regex.Quant_parse_state)
-- [regex.RE.parse_quantifier](#regex.RE.parse_quantifier)
-- [regex.Group_parse_state](#regex.Group_parse_state)
-- [regex.RE.parse_groups](#regex.RE.parse_groups)
-- [regex.RE.compile](#regex.RE.compile)
-- [regex.RE.get_code](#regex.RE.get_code)
-- [regex.RE.get_query](#regex.RE.get_query)
-- [regex.match_state](#regex.match_state)
-- [regex.state_str](#regex.state_str)
-- [regex.StateObj](#regex.StateObj)
-- [regex.RE.match_base](#regex.RE.match_base)
-- [regex.regex](#regex.regex)
-- [regex.new_regex](#regex.new_regex)
-- [regex.new_regex_by_size](#regex.new_regex_by_size)
-- [regex.RE.match_string](#regex.RE.match_string)
-- [regex.RE.find](#regex.RE.find)
-- [regex.RE.find_all](#regex.RE.find_all)
-- [regex.RE.replace](#regex.RE.replace)
+- [regex.utf8util_char_len](#regexutfutil_char_len)
+- [regex.RE.get_char](#regexreget_char)
+- [regex.RE.get_charb](#regexreget_charb)
+- [regex.is_alnum](#regexis_alnum)
+- [regex.is_not_alnum](#regexis_not_alnum)
+- [regex.is_space](#regexis_space)
+- [regex.is_not_space](#regexis_not_space)
+- [regex.is_digit](#regexis_digit)
+- [regex.is_not_digit](#regexis_not_digit)
+- [regex.is_wordchar](#regexis_wordchar)
+- [regex.is_not_wordchar](#regexis_not_wordchar)
+- [regex.is_lower](#regexis_lower)
+- [regex.is_upper](#regexis_upper)
+- [regex.RE.get_parse_error_string](#regexreget_parse_error_string)
+- [regex.utf8_str](#regexutf_str)
+- [regex.simple_log](#regexsimple_log)
+- [regex.Token](#regextoken)
+- [regex.Token.reset](#regextokenreset)
+- [regex.StateDotObj](#regexstatedotobj)
+- [regex.RE](#regexre)
+- [regex.RE.reset](#regexrereset)
+- [regex.RE.reset_src](#regexrereset_src)
+- [regex.RE.get_group](#regexreget_group)
+- [regex.BslsStruct](#regexbslsstruct)
+- [regex.BSLS_parse_state](#regexbsls_parse_state)
+- [regex.RE.parse_bsls](#regexreparse_bsls)
+- [regex.CharClass](#regexcharclass)
+- [regex.CharClass_parse_state](#regexcharclass_parse_state)
+- [regex.RE.get_char_class](#regexreget_char_class)
+- [regex.RE.check_char_class](#regexrecheck_char_class)
+- [regex.RE.parse_char_class](#regexreparse_char_class)
+- [regex.Quant_parse_state](#regexquant_parse_state)
+- [regex.RE.parse_quantifier](#regexreparse_quantifier)
+- [regex.Group_parse_state](#regexgroup_parse_state)
+- [regex.RE.parse_groups](#regexreparse_groups)
+- [regex.RE.compile](#regexrecompile)
+- [regex.RE.get_code](#regexreget_code)
+- [regex.RE.get_query](#regexreget_query)
+- [regex.match_state](#regexmatch_state)
+- [regex.state_str](#regexstate_str)
+- [regex.StateObj](#regexstateobj)
+- [regex.RE.match_base](#regexrematch_base)
+- [regex.regex](#regexregex)
+- [regex.new_regex](#regexnew_regex)
+- [regex.new_regex_by_size](#regexnew_regex_by_size)
+- [regex.RE.match_string](#regexrematch_string)
+- [regex.RE.find](#regexrefind)
+- [regex.RE.find_all](#regexrefind_all)
+- [regex.RE.replace](#regexrereplace)
 
 ## Documentation
 ### regex.utf8util_char_len
@@ -133,7 +133,7 @@ simple_log default log function
 
 ### regex.Token
 ```v
-struct Token {
+pub struct Token {
     ist  u32
     ch  u32
     ch_len  byte
@@ -161,7 +161,7 @@ fn (tok mut Token) reset() void
 ```
 ### regex.StateDotObj
 ```v
-struct StateDotObj {
+pub struct StateDotObj {
     i  int
     pc  int
     mi  int
@@ -170,7 +170,7 @@ struct StateDotObj {
 ```
 ### regex.RE
 ```v
-struct RE {
+pub struct RE {
     prog  []Token
     cc  []CharClass
     cc_index  int
@@ -209,7 +209,7 @@ pub fn (re RE) get_group(group_name string) (int, int)
 ```
 ### regex.BslsStruct
 ```v
-struct BslsStruct {
+pub struct BslsStruct {
     ch  u32
     validator  fn (byte) bool
 }
@@ -222,6 +222,10 @@ struct BslsStruct {
 
 ### regex.BSLS_parse_state
 ```v
+pub enum BSLS_parse_state {
+    undefined
+    start
+}
 ```
 ### regex.RE.parse_bsls
 ```v
@@ -231,7 +235,7 @@ parse_bsls return (index, str_len) BSLS_VALIDATOR_ARRAY index, len of the backsl
 
 ### regex.CharClass
 ```v
-struct CharClass {
+pub struct CharClass {
     cc_type  int
     ch0  u32
     ch1  u32
@@ -240,6 +244,10 @@ struct CharClass {
 ```
 ### regex.CharClass_parse_state
 ```v
+pub enum CharClass_parse_state {
+    undefined
+    start
+}
 ```
 ### regex.RE.get_char_class
 ```v
@@ -257,6 +265,10 @@ parse_char_class return (index, str_len, cc_type) of a char class [abcm-p], char
 
 ### regex.Quant_parse_state
 ```v
+pub enum Quant_parse_state {
+    undefined
+    start
+}
 ```
 **************************************************************************** 
  
@@ -274,6 +286,10 @@ parse_quantifier return (min, max, str_len, greedy_flag) of a {min,max}? quantif
 
 ### regex.Group_parse_state
 ```v
+pub enum Group_parse_state {
+    undefined
+    start
+}
 ```
 Groups
 
@@ -305,6 +321,10 @@ get_query return a string with a reconstruction of the query starting from the r
 
 ### regex.match_state
 ```v
+pub enum match_state {
+    undefined
+    start
+}
 ```
 **************************************************************************** 
  
@@ -318,7 +338,7 @@ fn state_str(s match_state) string
 ```
 ### regex.StateObj
 ```v
-struct StateObj {
+pub struct StateObj {
     match_flag  bool
     match_index  int
     match_first  int

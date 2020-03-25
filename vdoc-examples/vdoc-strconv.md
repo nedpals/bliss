@@ -2,13 +2,13 @@
 - atof.v
 - atoi.v
 ## Contents
-- [strconv.byte_to_lower](#strconv.byte_to_lower)
-- [strconv.common_parse_uint](#strconv.common_parse_uint)
-- [strconv.parse_uint](#strconv.parse_uint)
-- [strconv.common_parse_int](#strconv.common_parse_int)
-- [strconv.parse_int](#strconv.parse_int)
-- [strconv.atoi](#strconv.atoi)
-- [strconv.underscore_ok](#strconv.underscore_ok)
+- [strconv.byte_to_lower](#strconvbyte_to_lower)
+- [strconv.common_parse_uint](#strconvcommon_parse_uint)
+- [strconv.parse_uint](#strconvparse_uint)
+- [strconv.common_parse_int](#strconvcommon_parse_int)
+- [strconv.parse_int](#strconvparse_int)
+- [strconv.atoi](#strconvatoi)
+- [strconv.underscore_ok](#strconvunderscore_ok)
 
 ## Documentation
 ### strconv.byte_to_lower
