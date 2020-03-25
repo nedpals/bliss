@@ -5,7 +5,7 @@ import fs from "fs";
 import { buildComment, buildFnSignature } from '../signatures';
 import { Importer } from '../importer';
 
-async function vdoc() {
+async function vdoc(filepath: string) {
     let analyzer;
 
     try {
@@ -14,8 +14,9 @@ async function vdoc() {
         console.log(e);
     } finally {
         analyzer = await Analyzer.create();
-        const filepath = String.raw`C:\Users\admin\Documents\Coding\v\vlib\os\os.v`;
         await analyzer.open(filepath);
+
+        console.log('[vdoc] Generating docs for ' + filepath + '...');
 
         let modulePaths = await Importer.resolveModulePath(Analyzer.getCurrentModule(analyzer.getTree(filepath).rootNode));
         const t = await analyzer.getTypeList(filepath, { modules: false });
@@ -36,7 +37,7 @@ async function vdoc() {
                 if ((type.includes('~') || type.startsWith('C.')) || (t[mod][type].parent?.name.startsWith('C.') || (t[mod][type].type != 'function' && typeof t[mod][type].parent != "undefined"))) { continue; }
                 const linkName = mod + '.' + type;
 
-                fileContents.push(`- [${linkName}](#${linkName})`);
+                fileContents.push(`- [${linkName}](#${linkName.replace(/[^a-zA-Z_]/g, '').toLowerCase()})`);
             }
         }
 
@@ -58,12 +59,26 @@ async function vdoc() {
                 }
 
                 if (props.type == 'struct') {
-                    let signature = 'struct ' + type + ' {\n';
+                    let signature = 'pub struct ' + type + ' {\n';
 
                     // fields
                     keywords.filter(kw => t[mod][kw].parent?.name == type && t[mod][kw].type != 'function')
                         .forEach(kw => {
                             signature += `    ${kw.substring((type + '.').length)}  ${t[mod][kw].type}\n`;
+                        });
+
+                    signature += '}';    
+
+                    fileContents.push(signature);
+                }
+
+                if (props.type == 'enum') {
+                    let signature = 'pub enum ' + type + ' {\n';
+
+                    // fields
+                    keywords.filter(kw => t[mod][kw].parent?.name == type && t[mod][kw].type === 'enum_value')
+                        .forEach(kw => {
+                            signature += `    ${kw.substring((type + '.').length)}\n`;
                         });
 
                     signature += '}';    
@@ -78,8 +93,11 @@ async function vdoc() {
             }
         }
 
-        fs.writeFileSync(path_join(process.cwd(), 'vdoc-examples', 'vdoc-os.md'), fileContents.join('\n'), { encoding: 'utf-8' });
+        fs.writeFileSync(path_join(process.cwd(), 'vdoc-examples', `vdoc-${Analyzer.getCurrentModule(analyzer.getTree(filepath).rootNode)}.md`), fileContents.join('\n'), { encoding: 'utf-8' });
     }
 }
 
-vdoc();
+['readline/readline.v', 'term/term.v', 'time/time.v', 'strconv/atoi.v', 'regex/regex.v', 'math/math.v', 'flag/flag.v', 'os/os.v', 'sqlite/sqlite.v', 'fontstash/fontstash.v'].forEach(j => {
+    vdoc(path_join(String.raw`C:\Users\admin\Documents\Coding\v\vlib`, j))
+        .then(() => {});
+});
