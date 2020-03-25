@@ -389,9 +389,10 @@ export class TypeMap {
         const declarationList = findChildByType(pType.props.node as Parser.SyntaxNode, "enum_declaration_list")?.children || [];
 
         for (let fd of declarationList) {
-            const name = fd.childForFieldName('name')?.text as string;
+            let name = fd.childForFieldName('name')?.text as string;
+            name = pType.name + '.' + name;
             const props: TypeProperties = {
-                name: pType.name + '.' + name,
+                name,
                 type: 'enum_value',
                 node: fd,
                 parent: pType.props
