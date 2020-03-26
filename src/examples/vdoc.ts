@@ -2,8 +2,9 @@ import { Analyzer } from '../analyzer';
 import Parser from "web-tree-sitter";
 import { basename, join as path_join } from "path";
 import fs from "fs";
-import { buildComment, buildFnSignature } from '../signatures';
+import { buildComment, buildFnSignature, buildStructSignature, buildEnumSignature } from '../signatures';
 import { Importer } from '../importer';
+import { isNodePublic } from '../utils';
 
 async function vdoc(filepath: string) {
     let analyzer;
@@ -16,13 +17,12 @@ async function vdoc(filepath: string) {
         analyzer = await Analyzer.create();
         await analyzer.open(filepath);
 
-        console.log('[vdoc] Generating docs for ' + filepath + '...');
-
-        let modulePaths = await Importer.resolveModulePath(Analyzer.getCurrentModule(analyzer.getTree(filepath).rootNode));
-        const t = await analyzer.getTypeList(filepath, { modules: false });
+        console.log('[vdoc] Generating docs for \'' + analyzer.getModuleName(filepath) + '\'...');
+        let modulePaths = await Importer.resolveModulePath(analyzer.getModuleName(filepath));
+        const t = await analyzer.getTypeList(filepath, { includeModules: false });
         const fileContents: string[] = [];
 
-        fileContents.push(`# ${basename(filepath)}`);
+        fileContents.push(`# ${analyzer.getModuleName(filepath)} module`);
         
         for (let file of modulePaths) {
             fileContents.push(`- ${basename(file)}`);
@@ -34,7 +34,8 @@ async function vdoc(filepath: string) {
 
         for (let mod of modules) {
             for (let type of Object.keys(t[mod])) {
-                if ((type.includes('~') || type.startsWith('C.')) || (t[mod][type].parent?.name.startsWith('C.') || (t[mod][type].type != 'function' && typeof t[mod][type].parent != "undefined"))) { continue; }
+                if (!isNodePublic(t[mod][type].node as Parser.SyntaxNode)) { continue; }
+                if ((type.includes('~') || type.startsWith('C.')) || t[mod][type].parent?.name.startsWith('C.')) { continue; }
                 const linkName = mod + '.' + type;
 
                 fileContents.push(`- [${linkName}](#${linkName.replace(/[^a-zA-Z_]/g, '').toLowerCase()})`);
@@ -49,51 +50,32 @@ async function vdoc(filepath: string) {
             for (let i = 0; i < keywords.length; i++) {
                 let type = keywords[i];
                 let props = t[mod][type];
-                if ((type.includes('~') || type.startsWith('C.')) || (t[mod][type].parent?.name.startsWith('C.') || (t[mod][type].type != 'function' && typeof t[mod][type].parent != "undefined"))) { continue; }
+                if (!isNodePublic(props.node as Parser.SyntaxNode)) { continue; }
+                if ((type.includes('~') || type.startsWith('C.')) || props.parent?.name.startsWith('C.')) { continue; }
                 const linkName = mod + '.' + type;
                 
                 fileContents.push('### ' + linkName);
                 fileContents.push('```v');
-                if (props.type == 'function') {
-                    fileContents.push(buildFnSignature(t[mod][type].node as Parser.SyntaxNode));
+                if (props.type == 'function' || props.type == 'method') {
+                    fileContents.push(buildFnSignature(props.node as Parser.SyntaxNode));
                 }
 
                 if (props.type == 'struct') {
-                    let signature = 'pub struct ' + type + ' {\n';
-
-                    // fields
-                    keywords.filter(kw => t[mod][kw].parent?.name == type && t[mod][kw].type != 'function')
-                        .forEach(kw => {
-                            signature += `    ${kw.substring((type + '.').length)}  ${t[mod][kw].type}\n`;
-                        });
-
-                    signature += '}';    
-
-                    fileContents.push(signature);
+                    fileContents.push(buildStructSignature(props.node as Parser.SyntaxNode));
                 }
 
                 if (props.type == 'enum') {
-                    let signature = 'pub enum ' + type + ' {\n';
-
-                    // fields
-                    keywords.filter(kw => t[mod][kw].parent?.name == type && t[mod][kw].type === 'enum_value')
-                        .forEach(kw => {
-                            signature += `    ${kw.substring((type + '.').length)}\n`;
-                        });
-
-                    signature += '}';    
-
-                    fileContents.push(signature);
+                    fileContents.push(buildEnumSignature(props.node as Parser.SyntaxNode));
                 }
                 fileContents.push('```');
 
                 if (t[mod][type].node?.previousSibling?.type === "comment") {
-                    fileContents.push(buildComment(t[mod][type].node as Parser.SyntaxNode, true) + '\n');
+                    fileContents.push(buildComment(props.node as Parser.SyntaxNode, true) + '\n');
                 }
             }
         }
 
-        fs.writeFileSync(path_join(process.cwd(), 'vdoc-examples', `vdoc-${Analyzer.getCurrentModule(analyzer.getTree(filepath).rootNode)}.md`), fileContents.join('\n'), { encoding: 'utf-8' });
+        fs.writeFileSync(path_join(process.cwd(), 'vdoc-examples', `vdoc-${analyzer.getModuleName(filepath)}.md`), fileContents.join('\n'), { encoding: 'utf-8' });
     }
 }
 
