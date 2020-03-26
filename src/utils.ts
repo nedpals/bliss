@@ -1,4 +1,5 @@
 import { platform } from "process";
+import { SyntaxNode } from "web-tree-sitter";
 
 export const osSuffixes: string[] = (() => {
     let included: string[] = [];
@@ -35,3 +36,7 @@ export const excludedOSSuffixes: string[] = [
     '_bsd', '_freebsd', 
     '_solaris', '_haiku'
 ].filter(s => !osSuffixes.includes(s));
+
+export function isNodePublic(node: SyntaxNode | null): boolean {
+    return node?.children.findIndex(x => x.type === "pub_keyword") !== -1;
+}
