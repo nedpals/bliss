@@ -1,4 +1,4 @@
-# time.v
+# time module
 - format.v
 - parse.v
 - time_nix.v
@@ -13,10 +13,9 @@
 - [time.now](#timenow)
 - [time.Time.smonth](#timetimesmonth)
 - [time.new_time](#timenew_time)
-- [time.&Time.calc_unix](#timetimecalc_unix)
+- [time.&Time.unix_time](#timetimeunix_time)
 - [time.Time.add_seconds](#timetimeadd_seconds)
 - [time.Time.add_days](#timetimeadd_days)
-- [time.since](#timesince)
 - [time.Time.relative](#timetimerelative)
 - [time.day_of_week](#timeday_of_week)
 - [time.Time.day_of_week](#timetimeday_of_week)
@@ -28,25 +27,23 @@
 - [time.is_leap_year](#timeis_leap_year)
 - [time.days_in_month](#timedays_in_month)
 - [time.Time.str](#timetimestr)
-- [time.convert_ctime](#timeconvert_ctime)
 
 ## Documentation
 ### time.Time
 ```v
-pub struct Time {
-    year  int
-    month  int
-    day  int
-    hour  int
-    minute  int
-    second  int
-    unix  int
+pub  struct Time {
+    year   int
+    month   int
+    day   int
+    hour   int
+    minute   int
+    second   int
+    unix   int
 }
 ```
 ### time.FormatTime
 ```v
-pub enum FormatTime {
-    undefined
+pub  enum FormatTime {
     hhmm12
     hhmm24
     hhmmss12
@@ -56,8 +53,7 @@ pub enum FormatTime {
 ```
 ### time.FormatDate
 ```v
-pub enum FormatDate {
-    undefined
+pub  enum FormatDate {
     ddmmyy
     ddmmyyyy
     mmddyy
@@ -71,8 +67,7 @@ pub enum FormatDate {
 ```
 ### time.FormatDelimiter
 ```v
-pub enum FormatDelimiter {
-    undefined
+pub  enum FormatDelimiter {
     dot
     hyphen
     slash
@@ -97,11 +92,11 @@ pub fn new_time(t Time) Time
 ```
 new_time returns a time struct with calculated Unix time.
 
-### time.&Time.calc_unix
+### time.&Time.unix_time
 ```v
-pub fn (t &Time) calc_unix() int
+pub fn (t &Time) unix_time() int
 ```
-calc_unix returns Unix time.
+unix_time returns Unix time.
 
 ### time.Time.add_seconds
 ```v
@@ -114,12 +109,6 @@ add_days returns a new time struct with an added number of seconds.
 pub fn (t Time) add_days(days int) Time
 ```
 add_days returns a new time struct with an added number of days.
-
-### time.since
-```v
-fn since(t Time) int
-```
-since returns a number of seconds elapsed since a given time.
 
 ### time.Time.relative
 ```v
@@ -188,8 +177,3 @@ days_in_month returns a number of days in a given month.
 pub fn (t Time) str() string
 ```
 str returns time in the same format as `parse` expects ("YYYY-MM-DD HH:MM:SS").
-
-### time.convert_ctime
-```v
-fn convert_ctime(t C.tm) Time
-```

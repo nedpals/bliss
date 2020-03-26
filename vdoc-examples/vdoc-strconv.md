@@ -1,20 +1,14 @@
-# atoi.v
+# strconv module
 - atof.v
 - atoi.v
 ## Contents
-- [strconv.byte_to_lower](#strconvbyte_to_lower)
 - [strconv.common_parse_uint](#strconvcommon_parse_uint)
 - [strconv.parse_uint](#strconvparse_uint)
 - [strconv.common_parse_int](#strconvcommon_parse_int)
 - [strconv.parse_int](#strconvparse_int)
 - [strconv.atoi](#strconvatoi)
-- [strconv.underscore_ok](#strconvunderscore_ok)
 
 ## Documentation
-### strconv.byte_to_lower
-```v
-fn byte_to_lower(c byte) byte
-```
 ### strconv.common_parse_uint
 ```v
 pub fn common_parse_uint(s string, _base int, _bit_size int, error_on_non_digit bool, error_on_high_digit bool) u64
@@ -57,11 +51,3 @@ If bitSize is below 0 or above 64, an error is returned.
 pub fn atoi(s string) int
 ```
 atoi is equivalent to parse_int(s, 10, 0), converted to type int.
-
-### strconv.underscore_ok
-```v
-fn underscore_ok(s string) bool
-```
-underscore_ok reports whether the underscores in s are allowed. 
-Checking them in this one function lets all the parsers skip over them simply. 
-Underscore must appear only between digits or between a base prefix and a digit.

@@ -1,4 +1,4 @@
-# term.v
+# term module
 - colors.v
 - control.v
 - term_nix.v
@@ -11,7 +11,6 @@
 - [term.fail_message](#termfail_message)
 - [term.h_divider](#termh_divider)
 - [term.header](#termheader)
-- [term.supports_escape_sequences](#termsupports_escape_sequences)
 
 ## Documentation
 ### term.can_show_color_on_stdout
@@ -47,7 +46,8 @@ If colors are not allowed, returns a given string.
 pub fn h_divider(divider string) string
 ```
 h_divider returns a horizontal divider line with a dynamic width, 
-that depends on the current terminal settings.
+that depends on the current terminal settings. 
+If an empty string is passed in, print enough spaces to make a new line
 
 ### term.header
 ```v
@@ -56,8 +56,3 @@ pub fn header(text, divider string) string
 header returns a horizontal divider line with a centered text in the middle. 
 e.g: term.header('TEXT', '=') 
 =============== TEXT ===============
-
-### term.supports_escape_sequences
-```v
-fn supports_escape_sequences(fd int) bool
-```

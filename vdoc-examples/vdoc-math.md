@@ -1,4 +1,4 @@
-# math.v
+# math module
 - bits.v
 - const.v
 - math.v
@@ -12,6 +12,7 @@
 - [math.cbrt](#mathcbrt)
 - [math.ceil](#mathceil)
 - [math.cos](#mathcos)
+- [math.cosf](#mathcosf)
 - [math.cosh](#mathcosh)
 - [math.degrees](#mathdegrees)
 - [math.exp](#mathexp)
@@ -33,13 +34,16 @@
 - [math.max](#mathmax)
 - [math.min](#mathmin)
 - [math.pow](#mathpow)
+- [math.powf](#mathpowf)
 - [math.radians](#mathradians)
 - [math.round](#mathround)
 - [math.sin](#mathsin)
+- [math.sinf](#mathsinf)
 - [math.sinh](#mathsinh)
 - [math.sqrt](#mathsqrt)
 - [math.sqrtf](#mathsqrtf)
 - [math.tan](#mathtan)
+- [math.tanf](#mathtanf)
 - [math.tanh](#mathtanh)
 - [math.trunc](#mathtrunc)
 - [math.aprox_sin](#mathaprox_sin)
@@ -96,6 +100,12 @@ ceil returns the nearest f64 greater or equal to the provided value.
 pub fn cos(a f64) f64
 ```
 cos calculates cosine.
+
+### math.cosf
+```v
+pub fn cosf(a f32) f32
+```
+cosf calculates cosine. (float32)
 
 ### math.cosh
 ```v
@@ -223,6 +233,12 @@ pub fn pow(a, b f64) f64
 ```
 pow returns base raised to the provided power.
 
+### math.powf
+```v
+pub fn powf(a, b f32) f32
+```
+powf returns base raised to the provided power. (float32)
+
 ### math.radians
 ```v
 pub fn radians(degrees f64) f64
@@ -241,6 +257,12 @@ pub fn sin(a f64) f64
 ```
 sin calculates sine.
 
+### math.sinf
+```v
+pub fn sinf(a f32) f32
+```
+sinf calculates sine. (float32)
+
 ### math.sinh
 ```v
 pub fn sinh(a f64) f64
@@ -257,13 +279,19 @@ sqrt calculates square-root of the provided value.
 ```v
 pub fn sqrtf(a f32) f32
 ```
-sqrtf calculates square-root of the provided float32 value.
+sqrtf calculates square-root of the provided value. (float32)
 
 ### math.tan
 ```v
 pub fn tan(a f64) f64
 ```
 tan calculates tangent.
+
+### math.tanf
+```v
+pub fn tanf(a f32) f32
+```
+tanf calculates tangent. (float32)
 
 ### math.tanh
 ```v

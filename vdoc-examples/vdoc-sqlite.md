@@ -1,4 +1,4 @@
-# sqlite.v
+# sqlite module
 - sqlite.v
 ## Contents
 - [sqlite.DB](#sqlitedb)
@@ -13,14 +13,14 @@
 ## Documentation
 ### sqlite.DB
 ```v
-pub struct DB {
-    conn  &C.sqlite3
+pub  struct DB {
+    conn   &C.sqlite3
 }
 ```
 ### sqlite.Row
 ```v
-pub struct Row {
-    vals  []string
+pub  struct Row {
+    vals   []string
 }
 ```
 ### sqlite.connect
