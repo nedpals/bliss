@@ -116,7 +116,7 @@ export class Importer {
         const resolvedModules = await Importer.get(rootNode);
 
         // Construct dependency graph for current filepath.
-        const currentModuleName = Analyzer.getCurrentModule(rootNode);
+        const currentModuleName = Analyzer.getModuleNameFromNode(rootNode);
 
         // Add to dep graph if not present.
         if (Object.keys(this.depGraph).indexOf(currentModuleName) == -1) {

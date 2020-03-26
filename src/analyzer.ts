@@ -26,19 +26,23 @@ export class Analyzer {
         return an;
     }
 
-    getTree(filepath: string): Parser.Tree {
-        const parsedPath = path.parse(filepath);
+    getModuleName(filepath: string): string {
+        const tree = this.trees.get(filepath);
 
-        return this.trees[parsedPath.dir][parsedPath.base];
+        return Analyzer.getModuleNameFromTree(tree);
     }
 
-    static getCurrentModule(rootNode: Parser.SyntaxNode): string {
-        const module_clause = filterChildrenByType(rootNode, 'module_clause');
-        if (typeof module_clause === "undefined") { return 'main'; }
+    static getModuleNameFromTree(tree: Parser.Tree): string {
+        return Analyzer.getModuleNameFromNode(tree.rootNode);
+    }
+
+    static getModuleNameFromNode(rootNode: Parser.SyntaxNode): string {
+        const moduleClause = filterChildrenByType(rootNode, 'module_clause');
+        if (typeof moduleClause === "undefined") { return 'main'; }
     
         //@ts-ignore
-        const module_name = filterChildrenByType(module_clause[0], 'module_identifier')[0].text;
-        return module_name;
+        const moduleName = filterChildrenByType(moduleClause[0], 'module_identifier')[0].text;
+        return moduleName;
     }
 
     async open(filepath: string, source?: string): Promise<void> {
@@ -79,6 +83,7 @@ export class Analyzer {
         let generatedTypes: Types = {};
 
         const tree = this.trees.get(filepath);
+        const moduleName = Analyzer.getModuleNameFromTree(tree);
         let typemap: TypeMap = new TypeMap(filepath, tree.rootNode);
 
         if (options.modules) {
