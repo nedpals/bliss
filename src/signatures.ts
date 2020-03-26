@@ -1,13 +1,48 @@
 import Parser from "web-tree-sitter";
+import { findChildByType } from "./types";
+import { isNodePublic } from "./utils";
 
 export function buildFnSignature(node: Parser.SyntaxNode | null, withPub: boolean = true): string {
-    const isPublic = node?.children.findIndex(x => x.type === "pub_keyword") !== -1;
+    const isPublic = isNodePublic(node);
     const receiver = node?.type === "method_declaration" ? node.childForFieldName('receiver')?.text + ' ' : '';
     const name = node?.childForFieldName('name');
     const params = node?.childForFieldName('parameters');
     const result_t = node?.childForFieldName('result');
 
     return `${(isPublic && withPub) ? 'pub ' : ''}fn ${receiver}${name?.text}${params?.text} ${result_t !== null ? result_t?.text : 'void'}`
+}
+
+export function buildEnumSignature(node: Parser.SyntaxNode | null, withPub: boolean = true): string {
+    const isPublic = isNodePublic(node);
+    const name = findChildByType(node, "type_identifier")?.text as string;
+    const declarationList = findChildByType(node, "enum_declaration_list")?.children;
+    const members: string[] = [];
+
+    declarationList?.forEach(fd => {
+        const memberName = fd.childForFieldName('name')?.text as string;
+        if (typeof memberName == "undefined") { return; }
+        members.push('    ' + memberName);
+    });;
+
+    return `${(isPublic && withPub) ? 'pub ' : ''} enum ${name} {\n${members.join('\n')}\n}`
+}
+
+export function buildStructSignature(node: Parser.SyntaxNode | null, withPub: boolean = true): string {
+    const isPublic = isNodePublic(node);
+    const name = findChildByType(node, "type_identifier")?.text as string;
+    const declarationList = findChildByType(node, "field_declaration_list")?.children;
+
+    const fields: string[] = [];
+
+    declarationList?.forEach(fd => {
+        const fieldName = fd.childForFieldName('name')?.text as string;
+        const fieldType = fd.childForFieldName('type')?.text;
+        if (typeof fieldName === "undefined") { return; }
+    
+        fields.push('    ' + fieldName + '   ' + fieldType);
+    });
+
+    return `${(isPublic && withPub) ? 'pub ' : ''} struct ${name} {\n${fields.join('\n')}\n}`
 }
 
 export function buildTypeSignature(name: string, type: string): string {
