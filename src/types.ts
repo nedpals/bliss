@@ -47,7 +47,7 @@ export class TypeMap {
         this.types[this.moduleName][key] = props;
     }
 
-    generate(): Types {
+    generate(): void {
         for (let node of this.node.children) {
             switch (node.type) {
                 case 'type_declaration':

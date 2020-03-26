@@ -22,7 +22,7 @@ export class Analyzer {
     static async create(): Promise<Analyzer> {
         const an = new Analyzer();
         await an.init();
-
+    
         return an;
     }
 
@@ -79,14 +79,14 @@ export class Analyzer {
         // }
     }
 
-    async getTypeList(filepath: string, options = { modules: true }): Promise<Types> {
+    async getTypeList(filepath: string, options: { includeModules: boolean, line?: { row: number, column: number } } = { includeModules: true }): Promise<Types> {
         let generatedTypes: Types = {};
 
         const tree = this.trees.get(filepath);
         const moduleName = Analyzer.getModuleNameFromTree(tree);
         let typemap: TypeMap = new TypeMap(filepath, tree.rootNode);
 
-        if (options.modules) {
+        if (options.includeModules) {
             for (let mod of this.importer.depGraph[moduleName].dependencies) {
                 // console.log('[getTypeList] Getting type information for module "' + mod + '"...');
                 const modFiles = this.importer.depGraph[mod].files;
@@ -95,18 +95,20 @@ export class Analyzer {
                     // console.log('[getTypeList] Getting types on "' + modFilepath + '"...');
                     const modTree = this.trees.get(modFilepath);
                     let modTypemap = new TypeMap(modFilepath, modTree.rootNode);
+                    modTypemap.generate();
     
                     generatedTypes = {
                         ...generatedTypes,
-                        ...modTypemap.generate()
+                        ...modTypemap.getAll()
                     };
                 }
             }
         }
 
+        typemap.generate();
         generatedTypes = {
             ...generatedTypes,
-            ...typemap.generate()
+            ...typemap.getAll()
         };
 
         return generatedTypes;
