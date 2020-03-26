@@ -1,15 +1,19 @@
 import Parser, { SyntaxNode } from "web-tree-sitter";
 import { buildFnSignature } from "./signatures";
 import { Analyzer } from "./analyzer";
+import { SymbolKind } from "./symbols";
 
 export interface TypeProperties {
     type: string,
     name: string,
     file?: string,
-    methods?: TypeMap,
-    locals?: TypeMap,
+    children?: { 
+        [name: string]: TypeProperties
+    },
     parent?: TypeProperties,
-    node?: Parser.SyntaxNode
+    node?: Parser.SyntaxNode,
+    returnType: string,
+    symbolKind: SymbolKind
 }
 
 export interface Types { 
@@ -32,7 +36,7 @@ export class TypeMap {
     constructor(filepath: string, node: Parser.SyntaxNode) {
         this.filepath = filepath;
         this.node = node;
-        this.moduleName = Analyzer.getCurrentModule(this.node);
+        this.moduleName = Analyzer.getModuleNameFromNode(this.node.tree.rootNode);
     }
 
     getAll(): Types {
@@ -46,10 +50,33 @@ export class TypeMap {
     set(key: string, props: TypeProperties) {
         this.types[this.moduleName][key] = props;
     }
+ 
+    register(pType: ParsedType): void {    
+        const {name, props} = pType;
+        props.file = this.filepath;
+
+        if (typeof props.children == "undefined") {
+            props.children = {};
+        }
+        
+        if (Object.keys(this.types).indexOf(this.moduleName) == -1) {
+            this.types[this.moduleName] = {};
+        }
+
+        this.types[this.moduleName][name] = props;
+    }
+
+    registerChild(pType: ParsedType, parent: string) {
+        const {name, props} = pType;
+        props.file = this.filepath;
+
+        (this.types[this.moduleName][parent].children as { [name: string]: TypeProperties })[name] = props;
+    }
 
     generate(): void {
         for (let node of this.node.children) {
             switch (node.type) {
+                //TODO const_declaration
                 case 'type_declaration':
                     this.register(this.parseTypedef(node));
                     break;
@@ -59,23 +86,23 @@ export class TypeMap {
                 case 'struct_declaration':
                     const structProp = this.parseStruct(node);
                     this.register(structProp);
-                    this.parseStructFields(structProp).forEach(n => { this.register(n) });
+                    this.parseStructFields(structProp).forEach(n => { this.registerChild(n, structProp.name) });
                     break;
                 case 'enum_declaration':
-                    const enumProps = this.parseEnum(node);
-                    this.register(this.parseEnum(node));
-                    this.parseEnumValues(enumProps).forEach(n => { this.register(n) });
+                    const enumProp = this.parseEnum(node);
+                    this.register(enumProp);
+                    this.parseEnumValues(enumProp).forEach(n => { this.registerChild(n, enumProp.name) });
                     break;
                 case 'method_declaration':
-                    const methodProps = this.parseFunction(node);
-                    this.parseMethodReceiver(methodProps);
-                    this.register(methodProps);
-                    this.parseFunctionParameters(methodProps).forEach(n => { this.register(n) });
+                    const methodProp = this.parseFunction(node);
+                    this.parseMethodReceiver(methodProp);
                     break;
                 case 'function_declaration':
-                    const functionProps = this.parseFunction(node);
-                    this.register(functionProps);
-                    this.parseFunctionParameters(functionProps).forEach(n => { this.register(n) });
+                    const functionProp = this.parseFunction(node);
+                    this.register(functionProp);
+                    this.parseFunctionParameters(functionProp).forEach(n => {
+                        this.registerChild(n, functionProp.name)
+                    });
                     break;
                 // case ' ':
                 //     break;
@@ -83,13 +110,14 @@ export class TypeMap {
                     break;
             }
         }
-
-        return this.getAll();
     }
 
     identifyType(node: Parser.SyntaxNode | null): string {
         let type = '';
-        const custom_types = Object.keys(this.types).filter((s, i, a) => this.types[this.moduleName][s].type !== "function");
+
+        const custom_types = Object.keys(this.types).filter(s => {
+            return typeof this.types[this.moduleName][s] !== "undefined" && this.types[this.moduleName][s].type !== "function";
+        });
         const basic_types = ['bool', 'string', 'rune', 'i8', 'byte', 'i16', 'u16', 'int', 'u32', 'i64', 'u64', ...new Set(custom_types)];
 
         switch (node?.type) {
@@ -191,17 +219,6 @@ export class TypeMap {
         return type;
     }
 
-    register(pType: ParsedType): void {    
-        const {name, props} = pType;
-        props.file = this.filepath;
-        
-        if (Object.keys(this.types).indexOf(this.moduleName) == -1) {
-            this.types[this.moduleName] = {};
-        }
-
-        this.types[this.moduleName][name] = props;
-    }
-
     parseTypedef(node: Parser.SyntaxNode): ParsedType {
         const spec = findChildByType(node, 'type_spec');
         const typeName = spec?.childForFieldName('name')?.text as string;
@@ -212,18 +229,24 @@ export class TypeMap {
             props: {
                 type: 'alias_' + originalType,
                 name: typeName,
-                node
+                node,
+                returnType: typeName,
+                symbolKind: SymbolKind.Object
             }
         };
     }
     
     parseFunction(node: Parser.SyntaxNode): ParsedType {
         let functionName = node.childForFieldName('name')?.text as string;
+        let functionReturnType = node?.childForFieldName('result')?.text as string;
 
         let functionProps: TypeProperties = {
             type: `function`,
             name: functionName,
-            node
+            node,
+            returnType: functionReturnType,
+            symbolKind: SymbolKind.Function,
+            children: {}
         };
     
         return {
@@ -238,12 +261,25 @@ export class TypeMap {
         const receiverDeclList = findChildByType(receiver, 'parameter_declaration');
         const originalType = receiverDeclList?.childForFieldName('type')?.text as string;
 
-        pType.name = originalType + '.' + node.childForFieldName('name')?.text;
+        pType.props.type = "method";
+        pType.props.symbolKind = SymbolKind.Method;
 
-        if (!['f64'].includes(originalType)) {
+        // TODO: How to store struct methods
+        // if (typeof this.types[this.moduleName][originalType] == "undefined") {
+            // console.log(originalType);
+            pType.name = originalType + '.' + node.childForFieldName('name')?.text;
+            pType.props.name = pType.name; 
+
+            // } else {
             pType.props.parent = this.get(originalType);
-        }
-        pType.props.name = pType.name;
+            this.register(pType);
+
+            // this.parseFunctionParameters(pType).forEach(n => {
+            //     this.registerChild(n, pType.name)
+            // });
+
+            // this.registerChild(pType, originalType); 
+        // }
     }
 
     // parseMethodParameters(pType: ParsedType): ParsedType[] {
@@ -279,9 +315,11 @@ export class TypeMap {
             paramName = pType.name + '~' + paramName;
             const props: TypeProperties = {
                 name: paramName,
-                type: paramDataType,
+                type: "parameter",
                 node: pd,
-                parent: pType.props
+                parent: pType.props,
+                returnType: paramDataType,
+                symbolKind: SymbolKind.Variable
             }
 
             parsedFnParameters.push({ name: paramName, props });
@@ -319,7 +357,10 @@ export class TypeMap {
             props: {
                 name: structName,
                 type: 'struct',
-                node
+                node,
+                returnType: structName,
+                symbolKind: SymbolKind.Struct,
+                children: {}
             }
         };
     }
@@ -335,13 +376,14 @@ export class TypeMap {
             const structFieldType = fd.childForFieldName('type')?.text as string;
             if (typeof name === "undefined") { continue; }
             // // console.log('[parseStructFields] parent of field '+ name +' is ' + pType.props.name);
-            name = pType.name + '.' + name;
 
             const props: TypeProperties = {
                 name,
-                type: structFieldType,
+                type: 'struct_field',
                 node: fd,
-                parent: pType.props
+                parent: pType.props,
+                returnType: structFieldType,
+                symbolKind: SymbolKind.Field
             };
 
             parsedStructFields.push({ name, props });
@@ -355,13 +397,14 @@ export class TypeMap {
         const data = node.childForFieldName('right');
         const dataType = this.identifyType(data as Parser.SyntaxNode);
         const variableProps: TypeProperties = {
-            type: dataType,
-            name: dataType as string,
-            node
+            type: 'variable',
+            name: variableName,
+            node,
+            returnType: dataType as string,
+            symbolKind: SymbolKind.Variable
         };
     
         if (typeof pType !== "undefined") {
-            variableName = pType.name + '~' + variableName;
             variableProps.parent = pType.props;
         }
 
@@ -379,7 +422,10 @@ export class TypeMap {
             props: {
                 name: enum_name,
                 type: 'enum',
-                node
+                node,
+                returnType: 'enum',
+                symbolKind: SymbolKind.Enum,
+                children: {}
             }
         };
     }
@@ -390,12 +436,14 @@ export class TypeMap {
 
         for (let fd of declarationList) {
             let name = fd.childForFieldName('name')?.text as string;
-            name = pType.name + '.' + name;
+
             const props: TypeProperties = {
                 name,
-                type: 'enum_value',
+                type: 'enum_member',
                 node: fd,
-                parent: pType.props
+                parent: pType.props,
+                returnType: 'int',
+                symbolKind: SymbolKind.EnumMember
             };
 
             parsedEnumValues.push({ name, props });
@@ -407,7 +455,8 @@ export class TypeMap {
  
 
 export function findChildByType(node: Parser.SyntaxNode | null, name: string): Parser.SyntaxNode | null {
-    return node?.children.find(x => x.type === name) || null;
+    const child = node?.children.find(x => x.type === name) || null;
+    return child;
 }
 
 export function filterChildrenByType(node: Parser.SyntaxNode | null, name: string | string[]): Parser.SyntaxNode[] | undefined {
