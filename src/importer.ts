@@ -9,7 +9,6 @@ import { Analyzer } from "./analyzer";
 import which from "which";
 
 export type Module = string;
-export const cached_trees: { [key: string]: Parser.Tree } = {};
 
 interface DepGraph {
     [module_name: string]: {
@@ -107,11 +106,8 @@ export class Importer {
     }
 
     async getAndResolve(filepath: string, analyzer: Analyzer): Promise<void> {
-        // Parsed path
-        const parsedPath = path.parse(filepath);
-
         // Get the tree
-        const tree = analyzer.trees[parsedPath.dir][parsedPath.base];
+        const tree = analyzer.trees.get(filepath);
 
         // Get the root node of the tree.
         const rootNode = tree.rootNode;

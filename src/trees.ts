@@ -1,5 +1,5 @@
 import Parser from "web-tree-sitter";
-import * as path from "path";
+import { parse as path_parse } from "path";
 
 export interface ParsedFiles {
     [base_paths: string]: {
@@ -7,20 +7,44 @@ export interface ParsedFiles {
     }
 }
 
-export const trees: ParsedFiles = {};
-export async function newTree(options: { 'filepath': string, 'source': string, 'trees'?: ParsedFiles }, parser: Parser) {
-    let tree;
-    const parsedPath = path.parse(options.filepath);
-    
-    if (typeof options.source != "undefined") {
-        tree = parser.parse(options.source);
+export class TreeList {
+    private trees: ParsedFiles = {};
+    private parser: Parser;
+
+    constructor(parser: Parser) {
+        this.parser = parser;
     }
 
-    if (typeof tree !== "undefined") {
-        if (Object.keys(options.trees || trees).indexOf(parsedPath.dir) == -1) {
-            (options.trees || trees)[parsedPath.dir] = {};
+    async new(input: { filepath: string, source: string }) {
+        let tree;
+
+        const parser = this.parser;
+        let { dir, base } = path_parse(input.filepath);
+        
+        if (dir.length == 0) {
+            dir = '.';
         }
 
-        (options.trees || trees)[parsedPath.dir][parsedPath.base] = tree;
+        if (typeof input.source != "undefined") {
+            tree = parser.parse(input.source);
+        }
+
+        if (typeof tree !== "undefined") {
+            if (Object.keys(this.trees).indexOf(dir) == -1) {
+                this.trees[dir] = {};
+            }
+
+            this.trees[dir][base] = tree;
+        }
+    }
+
+    get(filepath: string): Parser.Tree {
+        let { dir, base } = path_parse(filepath);
+        
+        if (dir.length == 0) {
+            dir = '.';
+        }
+
+        return this.trees[dir][base];
     }
 }

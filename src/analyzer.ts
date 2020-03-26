@@ -1,22 +1,22 @@
 import Parser from "web-tree-sitter";
 import * as fs from "fs";
-import * as path from "path";
-import { Importer } from "./importer";
-import { newTree, ParsedFiles } from "./trees";
-import { filterChildrenByType, TypeMap, Types } from "./types";
-import { SymbolKind } from "./symbols";
 import { promisify } from "util";
+
+import { Importer } from "./importer";
+import { TreeList } from "./trees";
+import { filterChildrenByType, TypeMap, Types } from "./types";
 
 export class Analyzer {
     parser!: Parser;
     importer: Importer = new Importer();
-    trees: ParsedFiles = {};
+    trees: TreeList = new TreeList(this.parser);
 
     async init(): Promise<void> {
         this.parser = new Parser();
         const parserPath = require.resolve('tree-sitter-v/wasm/tree-sitter-v.wasm');
         const v = await Parser.Language.load(parserPath);
         this.parser.setLanguage(v);
+        this.trees = new TreeList(this.parser);
     };
 
     static async create(): Promise<Analyzer> {
@@ -45,7 +45,7 @@ export class Analyzer {
         const _source = typeof source == "undefined" ? await promisify(fs.readFile)(filepath, { encoding: 'utf-8' }) : source;
 
         try {
-            await newTree({ filepath, source: _source, trees: this.trees }, this.parser);
+            await this.trees.new({ filepath, source: _source });
             await this.importer.getAndResolve(filepath, this);
         } catch(e) {
             console.log(e);
@@ -78,9 +78,7 @@ export class Analyzer {
     async getTypeList(filepath: string, options = { modules: true }): Promise<Types> {
         let generatedTypes: Types = {};
 
-        const parsedPath = path.parse(filepath);
-        const tree = this.trees[parsedPath.dir][parsedPath.base];
-        const moduleName = Analyzer.getCurrentModule(tree.rootNode);
+        const tree = this.trees.get(filepath);
         let typemap: TypeMap = new TypeMap(filepath, tree.rootNode);
 
         if (options.modules) {
@@ -90,9 +88,7 @@ export class Analyzer {
                 
                 for (let modFilepath of modFiles) {
                     // console.log('[getTypeList] Getting types on "' + modFilepath + '"...');
-    
-                    const parsedModPath = path.parse(modFilepath);
-                    const modTree = this.trees[parsedModPath.dir][parsedModPath.base];
+                    const modTree = this.trees.get(modFilepath);
                     let modTypemap = new TypeMap(modFilepath, modTree.rootNode);
     
                     generatedTypes = {
