@@ -84,12 +84,14 @@ export class Analyzer {
         // }
     }
 
-    async getTypeList(filepath: string, options: { includeModules: boolean, line?: { row: number, column: number } } = { includeModules: true }): Promise<Types> {
-        let generatedTypes: Types = {};
+    async getTypeList(filepath: string, options: { includeModules: boolean, pos?: Parser.Point } = { includeModules: true }): Promise<Types> {
+        let generatedTypeLists: Types = {};
 
         const tree = this.trees.get(filepath);
         const moduleName = Analyzer.getModuleNameFromTree(tree);
-        let typemap: TypeMap = new TypeMap(filepath, tree.rootNode);
+        let node = tree.rootNode;        
+        let typemap: TypeMap = new TypeMap(filepath, node);
+        typemap.generate();
 
         if (options.includeModules) {
             for (let mod of this.importer.depGraph[moduleName].dependencies) {
@@ -102,20 +104,83 @@ export class Analyzer {
                     let modTypemap = new TypeMap(modFilepath, modTree.rootNode);
                     modTypemap.generate();
     
-                    generatedTypes = {
-                        ...generatedTypes,
+                    generatedTypeLists = {
+                        ...generatedTypeLists,
                         ...modTypemap.getAll()
                     };
                 }
             }
         }
 
-        typemap.generate();
-        generatedTypes = {
-            ...generatedTypes,
-            ...typemap.getAll()
-        };
+        // Applies to options.pos only
+        if (typeof options.pos !== 'undefined') {
+            let parentNode = node.descendantForPosition(options.pos);
 
-        return generatedTypes;
+            let isParent: boolean = false;
+            let list = typemap.getAll();
+            let locals = new TypeMap(filepath, node);
+
+            while (!isParent) {
+                // console.log(parentNode.text);
+                console.log(parentNode.type);
+                // TODO: Set rules for Struct
+                if (['struct', 'struct_declaration'].includes(parentNode.type)) {
+                    parentNode = parentNode.parent as Parser.SyntaxNode;
+                    continue;
+                }
+        
+                // TODO: Set rules for variables
+                if (['expression_list', 'identifier', 'short_var_declaration'].includes(parentNode.type)) {
+                    parentNode = parentNode.parent as Parser.SyntaxNode;
+                    continue;
+                } 
+        
+                // TODO: Set rules for enums
+                if (['fn', 'enum', 'enum_declaration'].includes(parentNode.type)) {
+                    parentNode = parentNode.parent as Parser.SyntaxNode;
+                    continue;
+                }
+
+                if (parentNode.type == 'function_declaration') {
+                    parentNode = parentNode.childForFieldName('body') as Parser.SyntaxNode;
+                    continue;
+                }
+        
+                // Consts
+                if (['const', 'const_declaration'].includes(parentNode.type)) {
+                    parentNode = parentNode.parent as Parser.SyntaxNode;
+                    continue;
+                }
+        
+                // TODO: Set rules for custom types
+                
+                // TODO: Set rules for parent nodes
+                // TODO: Identify name
+        
+                if (['block', 'source_file'].includes(parentNode.type)) {
+                    isParent = true;
+                    locals.setNode(parentNode);
+                    locals.generate();
+                    list = { ...list, ...locals.getAll() };
+                    continue;
+                }
+        
+                isParent = true;
+                break;
+            }
+            
+            Object.keys(locals.getAll()[locals.moduleName]).forEach(typName => {
+                const origType = locals.get(typName).returnType;
+                if (typeof typemap.getAll()[locals.moduleName][origType] !== "undefined") {
+                    locals.insertParent(typName, typemap.getAll()[locals.moduleName][origType]);
+                }
+            });
+
+            generatedTypeLists = { ...generatedTypeLists, ...list };
+        } else {
+            generatedTypeLists = { ...generatedTypeLists, ...typemap.getAll() };
+        }
+
+        return generatedTypeLists;
     }
 }
