@@ -39,6 +39,10 @@ export class TypeMap {
         this.moduleName = Analyzer.getModuleNameFromNode(this.node.tree.rootNode);
     }
 
+    setNode(node: Parser.SyntaxNode) {
+        this.node = node;
+    }
+
     getAll(): Types {
         return this.types;
     }
