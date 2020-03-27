@@ -89,8 +89,12 @@ export class TypeMap {
         (this.types[this.moduleName][parent].children as { [name: string]: TypeProperties })[name] = props;
     }
 
-    generate(): void {
+    generate(log: boolean = false): void {
         for (let node of this.node.children) {
+            if (log == true) {
+                console.log(node.type);
+            }
+
             switch (node.type) {
                 //TODO const_declaration
                 case 'type_declaration':
