@@ -31,7 +31,7 @@ export class TypeMap {
     private node: Parser.SyntaxNode;
     private filepath: string;
     private types: Types = {};
-    private moduleName: string;
+    moduleName: string;
     
     constructor(filepath: string, node: Parser.SyntaxNode) {
         this.filepath = filepath;
