@@ -10,18 +10,23 @@ export class Analyzer {
     parser!: Parser;
     importer: Importer = new Importer();
     trees: TreeList = new TreeList(this.parser);
+    parserPath: string = require.resolve('tree-sitter-v/wasm/tree-sitter-v.wasm');
 
-    async init(): Promise<void> {
+    async init(parserPath?: string): Promise<void> {
         this.parser = new Parser();
-        const parserPath = require.resolve('tree-sitter-v/wasm/tree-sitter-v.wasm');
-        const v = await Parser.Language.load(parserPath);
+        
+        if (typeof parserPath != 'undefined') { 
+            this.parserPath = parserPath;
+        }
+
+        const v = await Parser.Language.load(this.parserPath);
         this.parser.setLanguage(v);
         this.trees = new TreeList(this.parser);
     };
 
-    static async create(): Promise<Analyzer> {
+    static async create(parserPath?: string): Promise<Analyzer> {
         const an = new Analyzer();
-        await an.init();
+        await an.init(parserPath);
     
         return an;
     }
