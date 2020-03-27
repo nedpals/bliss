@@ -54,7 +54,7 @@ export class TypeMap {
     set(key: string, props: TypeProperties) {
         this.types[this.moduleName][key] = props;
     }
- 
+
     insertParent(key: string, prop: TypeProperties) {
         const type = this.get(key);
 
@@ -96,7 +96,30 @@ export class TypeMap {
             }
 
             switch (node.type) {
-                //TODO const_declaration
+                case 'interface_declaration':
+                    const ifaceProp = this.parseInterface(node);
+                    this.register(ifaceProp);
+                    this.parseInterfaceMethods(ifaceProp)
+                        .map(n => {
+                            this.parseFunctionParameters(n)
+                                .forEach(p => {
+                                    console.log(p);
+
+                                    n.props.file = this.filepath;
+                                    (n.props.children as { [n: string]: TypeProperties })[p.name] = p.props;
+                                });
+
+                            return n;
+                        })
+                        .forEach(n => {
+                            this.registerChild(n, ifaceProp.name);
+                        });
+                case 'const_declaration':
+                    this.parseConstants(node)
+                        .forEach(n => {
+                            this.register(n);
+                        });
+                    break;
                 case 'type_declaration':
                     this.register(this.parseTypedef(node));
                     break;
@@ -133,13 +156,14 @@ export class TypeMap {
     }
 
     identifyType(node: Parser.SyntaxNode | null): string {
+        
         let type = '';
-
+        
         const custom_types = Object.keys(this.types).filter(s => {
             return typeof this.types[this.moduleName][s] !== "undefined" && this.types[this.moduleName][s].type !== "function";
         });
         const basic_types = ['bool', 'string', 'rune', 'i8', 'byte', 'i16', 'u16', 'int', 'u32', 'i64', 'u64', ...new Set(custom_types)];
-
+    
         switch (node?.type) {
             case 'pointer_type':
                 let pointer_type = node?.children[0];
@@ -163,7 +187,7 @@ export class TypeMap {
                 type = this.identifyType(consequence as Parser.SyntaxNode);
                 break;
             case 'binary_expression':
-                type = 'bool';
+                type = this.identifyType(node.children[0] as Parser.SyntaxNode);
                 break;
             case 'slice_expression':
                 type = '';
@@ -239,6 +263,7 @@ export class TypeMap {
         return type;
     }
 
+    // TODO: Parse Sum types
     parseTypedef(node: Parser.SyntaxNode): ParsedType {
         const spec = findChildByType(node, 'type_spec');
         const typeName = spec?.childForFieldName('name')?.text as string;
@@ -258,7 +283,7 @@ export class TypeMap {
     
     parseFunction(node: Parser.SyntaxNode): ParsedType {
         let functionName = node.childForFieldName('name')?.text as string;
-        let functionReturnType = node?.childForFieldName('result')?.text as string;
+        let functionReturnType = node?.childForFieldName('result')?.text as string || 'void';
 
         let functionProps: TypeProperties = {
             type: `function`,
@@ -280,26 +305,23 @@ export class TypeMap {
         const receiver = node.childForFieldName('receiver');
         const receiverDeclList = findChildByType(receiver, 'parameter_declaration');
         const originalType = receiverDeclList?.childForFieldName('type')?.text as string;
+        const methodName = node.childForFieldName('name')?.text
 
         pType.props.type = "method";
         pType.props.symbolKind = SymbolKind.Method;
 
         // TODO: How to store struct methods
-        // if (typeof this.types[this.moduleName][originalType] == "undefined") {
-            // console.log(originalType);
-            pType.name = originalType + '.' + node.childForFieldName('name')?.text;
-            pType.props.name = pType.name; 
-
-            // } else {
+        pType.name = originalType + '.' + methodName;
+        pType.props.name = pType.name; 
+        
+        if (typeof this.types[this.moduleName] !== "undefined" && typeof this.get(originalType) !== "undefined") {
             pType.props.parent = this.get(originalType);
-            this.register(pType);
-
-            // this.parseFunctionParameters(pType).forEach(n => {
-            //     this.registerChild(n, pType.name)
-            // });
-
-            // this.registerChild(pType, originalType); 
-        // }
+        }
+        
+        this.register(pType);
+        this.parseFunctionParameters(pType).forEach(n => {
+            this.registerChild(n, pType.name)
+        });
     }
 
     // parseMethodParameters(pType: ParsedType): ParsedType[] {
@@ -368,6 +390,70 @@ export class TypeMap {
         }
 
         return parsedFunctionBody;
+    }
+
+    parseInterface(node: Parser.SyntaxNode): ParsedType {
+        const interfaceName = findChildByType(node, 'type_identifier')?.text as string;
+        const interfaceProp: TypeProperties = {
+            type: 'interface',
+            name: interfaceName,
+            node,
+            returnType: 'interface',
+            symbolKind: SymbolKind.Interface
+        }
+
+        return {
+            name: interfaceName,
+            props: interfaceProp
+        }
+    }
+
+    parseInterfaceMethods(pType: ParsedType): ParsedType[] {
+        const methodSpecList = findChildByType(pType.props.node as Parser.SyntaxNode, "method_spec_list")?.children || [];
+        const parsedInterfaceMethods: ParsedType[] = [];
+
+        for (let ms of methodSpecList) {
+            // console.log(ms.text);
+            let name = ms.childForFieldName('name')?.text;
+            if (typeof name === "undefined") { continue; }
+            const returnType = ms.childForFieldName('result')?.text as string;
+
+            let props: TypeProperties = {
+                name,
+                type: 'interface_method',
+                node: ms,
+                parent: pType.props,
+                returnType: returnType,
+                symbolKind: SymbolKind.Field,
+                children: {}
+            };
+
+            parsedInterfaceMethods.push({ name, props });
+        }
+
+        return parsedInterfaceMethods;
+    }
+
+    parseConstants(node: Parser.SyntaxNode): ParsedType[] {
+        const constants: ParsedType[] = [];
+
+        node.children.forEach(c => {
+            const name = c.childForFieldName('name')?.text as string;
+            if (typeof name === "undefined") { return; }
+            const data = c.childForFieldName('value')?.firstChild;
+            const dataType = this.identifyType(data as Parser.SyntaxNode);
+            const constProps: TypeProperties = {
+                type: 'constant',
+                name,
+                node,
+                returnType: dataType as string,
+                symbolKind: SymbolKind.Constant
+            };
+
+            constants.push({ name, props: constProps });
+        });
+
+        return constants;
     }
 
     parseStruct(node: Parser.SyntaxNode): ParsedType {
