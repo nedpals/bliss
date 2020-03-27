@@ -55,6 +55,18 @@ export class TypeMap {
         this.types[this.moduleName][key] = props;
     }
  
+    insertParent(key: string, prop: TypeProperties) {
+        const type = this.get(key);
+
+        if (typeof type.parent == "undefined") {
+            //@ts-ignore
+            this.types[this.moduleName][key].parent = {};
+        }
+
+        //@ts-ignore
+        this.types[this.moduleName][key].parent[prop.name] = prop;
+    }
+ 
     register(pType: ParsedType): void {    
         const {name, props} = pType;
         props.file = this.filepath;
