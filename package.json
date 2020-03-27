@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "glob": "^7.1.6",
-    "tree-sitter-v": "^1.0.3",
+    "tree-sitter-v": "^1.0.4",
     "web-tree-sitter": "^0.16.0",
     "which": "^2.0.2"
   },
