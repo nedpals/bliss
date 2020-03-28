@@ -19,11 +19,9 @@ export class TreeList {
         let tree;
 
         const parser = this.parser;
-        let { dir, base } = path_parse(input.filepath);
-        
-        if (dir.length == 0) {
-            dir = '.';
-        }
+        const treePaths = TreeList.getTreePath(input.filepath);
+        const dir = treePaths[0];
+        const base = treePaths[1]; 
 
         if (typeof input.source != "undefined") {
             tree = parser.parse(input.source);
@@ -39,12 +37,17 @@ export class TreeList {
     }
 
     get(filepath: string): Parser.Tree {
-        let { dir, base } = path_parse(filepath);
+        const treePaths = TreeList.getTreePath(filepath);
+        const dir = treePaths[0];
+        const base = treePaths[1]; 
         
-        if (dir.length == 0) {
-            dir = '.';
+        return this.trees[dir][base];
         }
 
-        return this.trees[dir][base];
+    static getTreePath(filepath: string): string[] {
+        let { dir, base } = path_parse(filepath);
+        if (dir.length == 0) { dir = '.'; }
+
+        return [dir, base];
     }
 }
