@@ -4,7 +4,17 @@ import { promisify } from "util";
 
 import { Importer } from "./importer";
 import { TreeList } from "./trees";
-import { filterChildrenByType, TypeMap, Types } from "./types";
+import { filterChildrenByType, TypeMap, Types, TypeProperties } from "./types";
+import { buildComment, buildSignature } from "./signatures";
+import { isPositionAtRange } from "./utils";
+
+export interface TypeInfo {
+    name: string,
+    returnType?: string,
+    signature?: string,
+    comment: string,
+    prop?: TypeProperties 
+}
 
 export class Analyzer {
     parser!: Parser;
@@ -61,27 +71,61 @@ export class Analyzer {
         }
     }
 
-    async update(filepath: string, source: string) {
-        // TODO: Update tree function
-        // function updateTree(parser: Parser, edit: vscode.TextDocumentChangeEvent) {
-        //     if (edit.contentChanges.length == 0) return
-        //     const old = trees[edit.document.uri.toString()]
-        //     for (const e of edit.contentChanges) {
-        //         const startIndex = e.rangeOffset
-        //         const oldEndIndex = e.rangeOffset + e.rangeLength
-        //         const newEndIndex = e.rangeOffset + e.text.length
-        //         const startPos = edit.document.positionAt(startIndex)
-        //         const oldEndPos = edit.document.positionAt(oldEndIndex)
-        //         const newEndPos = edit.document.positionAt(newEndIndex)
-        //         const startPosition = asPoint(startPos)
-        //         const oldEndPosition = asPoint(oldEndPos)
-        //         const newEndPosition = asPoint(newEndPos)
-        //         const delta = {startIndex, oldEndIndex, newEndIndex, startPosition, oldEndPosition, newEndPosition}
-        //         old.edit(delta)
-        //     }
-        //     const t = parser.parse(edit.document.getText(), old) // TODO don't use getText, use Parser.Input
-        //     trees[edit.document.uri.toString()] = t
-        // }
+
+
+    async provideInfo(filepath: string, pos: Parser.Point, name: string): Promise<TypeInfo> {
+        const typelists = await this.getTypeList(filepath, { includeModules: false, pos });
+        const treePath = (path: string) => {
+            const paths = path.split('.');
+            return { parent: paths[0], child: paths[1] };
+        };
+
+        
+        if (typelists !== {}) {
+            let selectedChildName: string | undefined;
+            
+            for (let s of Object.keys(typelists[this.getModuleName(filepath)])) {
+                const childName = Object.keys(typelists[this.getModuleName(filepath)][s].children as object).find(c => {
+                    const child = typelists[this.getModuleName(filepath)][c];
+                    return c === name || isPositionAtRange(pos, child.node as Parser.SyntaxNode);
+                });
+                
+                if (typeof childName !== 'undefined') {
+                    selectedChildName = `${s}.${childName || name}`;
+                    console.log(selectedChildName);
+                    break;
+                }
+            }
+            
+            const selectedChild = (() => {
+                const { parent, child } = treePath(selectedChildName as string);
+                //@ts-ignore
+                return typelists[this.getModuleName(filepath)][parent].children[child];
+            })();
+            const selected = typelists[this.getModuleName(filepath)][name] || selectedChild;
+
+            return {
+                name,
+                comment: buildComment(selected.node as Parser.SyntaxNode, true),
+                prop: selected,
+                returnType: selected.returnType,
+                signature: buildSignature(selected)
+            };
+        }
+
+        switch (name) {
+            case 'fn': return { name, comment: 'A string.' };
+            case 'pub': return { name, comment: 'Exposed to the public.' };
+            case 'i8':
+            case 'i16':
+            case 'i64':
+            case 'int': return { name, comment: 'An integer.' };
+            case 'rune': return { name, comment: 'A rune.' };
+            case 'byte': return { name, comment: 'A byte.' };
+            case 'u16':
+            case 'u32': return { name, comment: 'An unsigned integer.' }
+            default: return { name, comment: 'Unknown' };
+        }
     }
 
     async getTypeList(filepath: string, options: { includeModules: boolean, pos?: Parser.Point } = { includeModules: true }): Promise<Types> {
