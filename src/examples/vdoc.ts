@@ -1,10 +1,16 @@
-import { Analyzer } from '../analyzer';
 import Parser from "web-tree-sitter";
 import { basename, join as path_join } from "path";
 import fs from "fs";
-import { buildComment, buildFnSignature, buildStructSignature, buildEnumSignature } from '../signatures';
-import { Importer } from '../importer';
-import { isNodePublic } from '../utils';
+import { 
+    Analyzer,
+    Importer,
+    isNodePublic,
+    buildComment, 
+    buildFnSignature, 
+    buildStructSignature, 
+    buildEnumSignature
+} from '../bliss';
+
 
 async function vdoc(filepath: string) {
     let analyzer;
