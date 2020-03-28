@@ -1,5 +1,5 @@
 import { platform } from "process";
-import { SyntaxNode } from "web-tree-sitter";
+import { SyntaxNode, Point } from "web-tree-sitter";
 
 export const osSuffixes: string[] = (() => {
     let included: string[] = [];
@@ -39,4 +39,11 @@ export const excludedOSSuffixes: string[] = [
 
 export function isNodePublic(node: SyntaxNode | null): boolean {
     return node?.children.findIndex(x => x.type === "pub_keyword") !== -1;
+}
+
+export function isPositionAtRange(pos: Point, node: SyntaxNode): boolean {
+    const withinCol = pos.column > node.startPosition.column && pos.column < node.endPosition.column;
+    const withinRow = pos.row > node.startPosition.row && pos.row < node.endPosition.row;
+
+    return withinCol && withinRow;
 }
