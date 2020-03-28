@@ -1,5 +1,5 @@
 import Parser from "web-tree-sitter";
-import { findChildByType } from "./types";
+import { findChildByType, TypeProperties } from "./types";
 import { isNodePublic } from "./utils";
 
 export function buildFnSignature(node: Parser.SyntaxNode | null, withPub: boolean = true): string {
@@ -25,6 +25,27 @@ export function buildEnumSignature(node: Parser.SyntaxNode | null, withPub: bool
     });;
 
     return `${(isPublic && withPub) ? 'pub ' : ''} enum ${name} {\n${members.join('\n')}\n}`
+}
+
+export function buildSignature(pType: TypeProperties): string {
+    const node = pType.node as Parser.SyntaxNode;
+
+    switch (pType.type) {
+        case 'struct':
+            return buildStructSignature(node, false);
+        case 'enum':
+            return buildEnumSignature(node, false);
+        case 'function':
+        case 'method':
+            return buildFnSignature(node, false);
+        case 'struct_field':
+        case 'enum_member':
+        case 'variable':
+        case 'parameter':
+            return buildTypeSignature(pType.name, pType.returnType);
+        default:
+            return '';
+    }
 }
 
 export function buildStructSignature(node: Parser.SyntaxNode | null, withPub: boolean = true): string {
