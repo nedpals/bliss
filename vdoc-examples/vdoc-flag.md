@@ -5,6 +5,9 @@
 - [flag.Flag.str](#flagflagstr)
 - [flag.[]Flag.str](#flagflagstr)
 - [flag.FlagParser](#flagflagparser)
+- [flag.SPACE](#flagspace)
+- [flag.UNDERLINE](#flagunderline)
+- [flag.MAX_ARGS_NUMBER](#flagmax_args_number)
 - [flag.new_flag_parser](#flagnew_flag_parser)
 - [flag.FlagParser.application](#flagflagparserapplication)
 - [flag.FlagParser.version](#flagflagparserversion)
@@ -31,7 +34,7 @@
 ## Documentation
 ### flag.Flag
 ```v
-pub  struct Flag {
+ struct Flag {
     name   string
     abbr   byte
     usage   string
@@ -85,15 +88,15 @@ data object storing information about a defined flag
 
 ### flag.Flag.str
 ```v
-pub fn (f Flag) str() string
+fn (f Flag) str() string
 ```
 ### flag.[]Flag.str
 ```v
-pub fn (af []Flag) str() string
+fn (af []Flag) str() string
 ```
 ### flag.FlagParser
 ```v
-pub  struct FlagParser {
+ struct FlagParser {
     args   []string
     flags   []Flag
     application_name   string
@@ -106,47 +109,59 @@ pub  struct FlagParser {
 ```
 
 
+### flag.SPACE
+```v
+
+```
+### flag.UNDERLINE
+```v
+
+```
+### flag.MAX_ARGS_NUMBER
+```v
+
+```
 ### flag.new_flag_parser
 ```v
-pub fn new_flag_parser(args []string) &FlagParser
+fn new_flag_parser(args []string) &FlagParser
 ```
 create a new flag set for parsing command line arguments 
 TODO use INT_MAX some how
 
 ### flag.FlagParser.application
 ```v
-pub fn (fs mut FlagParser) application(name string) void
+fn (fs mut FlagParser) application(name string) void
 ```
 change the application name to be used in 'usage' output
 
 ### flag.FlagParser.version
 ```v
-pub fn (fs mut FlagParser) version(vers string) void
+fn (fs mut FlagParser) version(vers string) void
 ```
 change the application version to be used in 'usage' output
 
 ### flag.FlagParser.description
 ```v
-pub fn (fs mut FlagParser) description(desc string) void
+fn (fs mut FlagParser) description(desc string) void
 ```
 change the application version to be used in 'usage' output
 
 ### flag.FlagParser.skip_executable
 ```v
-pub fn (fs mut FlagParser) skip_executable() void
+fn (fs mut FlagParser) skip_executable() void
 ```
 in most cases you do not need the first argv for flag parsing
 
 ### flag.FlagParser.bool_opt
 ```v
-pub fn (fs mut FlagParser) bool_opt(name string, abbr byte, usage string) ?bool
+fn (fs mut FlagParser) bool_opt(name string, abbr byte, usage string) ?bool
 ```
 bool_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
 ### flag.FlagParser.bool
 ```v
-pub fn (fs mut FlagParser) bool(name string, abbr byte, bdefault bool, usage string) bool
+fn (fs mut FlagParser) bool(name string, abbr byte, bdefault bool, usage string) bool
 ```
 defining and parsing a bool flag 
  if defined 
@@ -158,21 +173,21 @@ ODO error handling for invalid string to bool conversion
 
 ### flag.FlagParser.int_multi
 ```v
-pub fn (fs mut FlagParser) int_multi(name string, abbr byte, usage string) []int
+fn (fs mut FlagParser) int_multi(name string, abbr byte, usage string) []int
 ```
 int_multi returns all instances of values associated with the flags provided 
 In the case that none were found, it returns an empty array.
 
 ### flag.FlagParser.int_opt
 ```v
-pub fn (fs mut FlagParser) int_opt(name string, abbr byte, usage string) ?int
+fn (fs mut FlagParser) int_opt(name string, abbr byte, usage string) ?int
 ```
 int_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
 ### flag.FlagParser.int
 ```v
-pub fn (fs mut FlagParser) int(name string, abbr byte, idefault int, usage string) int
+fn (fs mut FlagParser) int(name string, abbr byte, idefault int, usage string) int
 ```
 defining and parsing an int flag 
  if defined 
@@ -184,21 +199,21 @@ ODO error handling for invalid string to int conversion
 
 ### flag.FlagParser.float_multi
 ```v
-pub fn (fs mut FlagParser) float_multi(name string, abbr byte, usage string) []f32
+fn (fs mut FlagParser) float_multi(name string, abbr byte, usage string) []f32
 ```
 float_multi returns all instances of values associated with the flags provided 
 In the case that none were found, it returns an empty array.
 
 ### flag.FlagParser.float_opt
 ```v
-pub fn (fs mut FlagParser) float_opt(name string, abbr byte, usage string) ?f32
+fn (fs mut FlagParser) float_opt(name string, abbr byte, usage string) ?f32
 ```
 float_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
 ### flag.FlagParser.float
 ```v
-pub fn (fs mut FlagParser) float(name string, abbr byte, fdefault f32, usage string) f32
+fn (fs mut FlagParser) float(name string, abbr byte, fdefault f32, usage string) f32
 ```
 defining and parsing a float flag 
  if defined 
@@ -210,21 +225,21 @@ ODO error handling for invalid string to float conversion
 
 ### flag.FlagParser.string_multi
 ```v
-pub fn (fs mut FlagParser) string_multi(name string, abbr byte, usage string) []string
+fn (fs mut FlagParser) string_multi(name string, abbr byte, usage string) []string
 ```
 string_multi returns all instances of values associated with the flags provided 
 In the case that none were found, it returns an empty array.
 
 ### flag.FlagParser.string_opt
 ```v
-pub fn (fs mut FlagParser) string_opt(name string, abbr byte, usage string) ?string
+fn (fs mut FlagParser) string_opt(name string, abbr byte, usage string) ?string
 ```
 string_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
 ### flag.FlagParser.string
 ```v
-pub fn (fs mut FlagParser) string(name string, abbr byte, sdefault string, usage string) string
+fn (fs mut FlagParser) string(name string, abbr byte, sdefault string, usage string) string
 ```
 defining and parsing a string flag 
  if defined 
@@ -235,32 +250,32 @@ version with abbr
 
 ### flag.FlagParser.limit_free_args_to_at_least
 ```v
-pub fn (fs mut FlagParser) limit_free_args_to_at_least(n int) void
+fn (fs mut FlagParser) limit_free_args_to_at_least(n int) void
 ```
 ### flag.FlagParser.limit_free_args_to_exactly
 ```v
-pub fn (fs mut FlagParser) limit_free_args_to_exactly(n int) void
+fn (fs mut FlagParser) limit_free_args_to_exactly(n int) void
 ```
 ### flag.FlagParser.limit_free_args
 ```v
-pub fn (fs mut FlagParser) limit_free_args(min, max int) void
+fn (fs mut FlagParser) limit_free_args(min, max int) void
 ```
 this will cause an error in finalize() if free args are out of range 
 (min, ..., max)
 
 ### flag.FlagParser.arguments_description
 ```v
-pub fn (fs mut FlagParser) arguments_description(description string) void
+fn (fs mut FlagParser) arguments_description(description string) void
 ```
 ### flag.FlagParser.usage
 ```v
-pub fn (fs FlagParser) usage() string
+fn (fs FlagParser) usage() string
 ```
 collect all given information and
 
 ### flag.FlagParser.finalize
 ```v
-pub fn (fs FlagParser) finalize() ?[]string
+fn (fs FlagParser) finalize() ?[]string
 ```
 finalize argument parsing -> call after all arguments are defined 
  

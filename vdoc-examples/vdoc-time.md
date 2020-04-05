@@ -6,174 +6,103 @@
 - time.v
 - unix.v
 ## Contents
-- [time.Time](#timetime)
-- [time.FormatTime](#timeformattime)
-- [time.FormatDate](#timeformatdate)
-- [time.FormatDelimiter](#timeformatdelimiter)
-- [time.now](#timenow)
-- [time.Time.smonth](#timetimesmonth)
-- [time.new_time](#timenew_time)
-- [time.&Time.unix_time](#timetimeunix_time)
-- [time.Time.add_seconds](#timetimeadd_seconds)
-- [time.Time.add_days](#timetimeadd_days)
-- [time.Time.relative](#timetimerelative)
-- [time.day_of_week](#timeday_of_week)
-- [time.Time.day_of_week](#timetimeday_of_week)
-- [time.Time.weekday_str](#timetimeweekday_str)
-- [time.ticks](#timeticks)
-- [time.sleep](#timesleep)
-- [time.sleep_ms](#timesleep_ms)
-- [time.usleep](#timeusleep)
-- [time.is_leap_year](#timeis_leap_year)
-- [time.days_in_month](#timedays_in_month)
-- [time.Time.str](#timetimestr)
+- [time.Time.format](#timetimeformat)
+- [time.Time.format_ss](#timetimeformat_ss)
+- [time.Time.hhmm](#timetimehhmm)
+- [time.Time.hhmmss](#timetimehhmmss)
+- [time.Time.hhmm12](#timetimehhmm)
+- [time.Time.ymmdd](#timetimeymmdd)
+- [time.Time.ddmmy](#timetimeddmmy)
+- [time.Time.md](#timetimemd)
+- [time.Time.clean](#timetimeclean)
+- [time.Time.clean12](#timetimeclean)
+- [time.Time.get_fmt_time_str](#timetimeget_fmt_time_str)
+- [time.Time.get_fmt_date_str](#timetimeget_fmt_date_str)
+- [time.Time.get_fmt_str](#timetimeget_fmt_str)
 
 ## Documentation
-### time.Time
+### time.Time.format
 ```v
-pub  struct Time {
-    year   int
-    month   int
-    day   int
-    hour   int
-    minute   int
-    second   int
-    unix   int
-}
+fn (t Time) format() string
 ```
-### time.FormatTime
-```v
-pub  enum FormatTime {
-    hhmm12
-    hhmm24
-    hhmmss12
-    hhmmss24
-    no_time
-}
-```
-### time.FormatDate
-```v
-pub  enum FormatDate {
-    ddmmyy
-    ddmmyyyy
-    mmddyy
-    mmddyyyy
-    mmmd
-    mmmdd
-    mmmddyyyy
-    no_date
-    yyyymmdd
-}
-```
-### time.FormatDelimiter
-```v
-pub  enum FormatDelimiter {
-    dot
-    hyphen
-    slash
-    space
-}
-```
-### time.now
-```v
-pub fn now() Time
-```
-now returns current local time.
+format returns a date string in "YYYY-MM-DD HH:MM" format (24h).
 
-### time.Time.smonth
+### time.Time.format_ss
 ```v
-pub fn (t Time) smonth() string
+fn (t Time) format_ss() string
 ```
-smonth returns month name.
+format_ss returns a date string in "YYYY-MM-DD HH:MM:SS" format (24h).
 
-### time.new_time
+### time.Time.hhmm
 ```v
-pub fn new_time(t Time) Time
+fn (t Time) hhmm() string
 ```
-new_time returns a time struct with calculated Unix time.
+hhmm returns a date string in "HH:MM" format (24h).
 
-### time.&Time.unix_time
+### time.Time.hhmmss
 ```v
-pub fn (t &Time) unix_time() int
+fn (t Time) hhmmss() string
 ```
-unix_time returns Unix time.
+hhmmss returns a date string in "HH:MM:SS" format (24h).
 
-### time.Time.add_seconds
+### time.Time.hhmm12
 ```v
-pub fn (t Time) add_seconds(seconds int) Time
+fn (t Time) hhmm12() string
 ```
-add_days returns a new time struct with an added number of seconds.
+hhmm12 returns a date string in "HH:MM" format (12h).
 
-### time.Time.add_days
+### time.Time.ymmdd
 ```v
-pub fn (t Time) add_days(days int) Time
+fn (t Time) ymmdd() string
 ```
-add_days returns a new time struct with an added number of days.
+ymmdd returns a date string in "YYYY-MM-DD" format.
 
-### time.Time.relative
+### time.Time.ddmmy
 ```v
-pub fn (t Time) relative() string
+fn (t Time) ddmmy() string
 ```
-relative returns a string representation of difference between time 
-and current time.
+ddmmy returns a date string in "DD.MM.YYYY" format.
 
-### time.day_of_week
+### time.Time.md
 ```v
-pub fn day_of_week(y, m, d int) int
+fn (t Time) md() string
 ```
-day_of_week returns the current day of a given year, month, and day, 
-as an integer.
+md returns a date string in "MMM D" format.
 
-### time.Time.day_of_week
+### time.Time.clean
 ```v
-pub fn (t Time) day_of_week() int
+fn (t Time) clean() string
 ```
-day_of_week returns the current day as an integer.
+clean returns a date string in a following format: 
+ - a date string in "HH:MM" format (24h) for current day 
+ - a date string in "MMM D HH:MM" format (24h) for date of current year 
+ - a date string formatted with format function for other dates
 
-### time.Time.weekday_str
+### time.Time.clean12
 ```v
-pub fn (t Time) weekday_str() string
+fn (t Time) clean12() string
 ```
-weekday_str returns the current day as a string.
+clean12 returns a date string in a following format: 
+ - a date string in "HH:MM" format (12h) for current day 
+ - a date string in "MMM D HH:MM" format (12h) for date of current year 
+ - a date string formatted with format function for other dates
 
-### time.ticks
+### time.Time.get_fmt_time_str
 ```v
-pub fn ticks() i64
+fn (t Time) get_fmt_time_str(fmt_time FormatTime) string
 ```
-ticks returns a number of milliseconds elapsed since system start.
+get_fmt_time_str returns a date string with specified FormatTime type.
 
-### time.sleep
+### time.Time.get_fmt_date_str
 ```v
-pub fn sleep(seconds int) void
+fn (t Time) get_fmt_date_str(fmt_dlmtr FormatDelimiter, fmt_date FormatDate) string
 ```
-sleep makes the calling thread sleep for a given number of seconds.
+get_fmt_time_str returns a date string with specified 
+FormatDelimiter and FormatDate type.
 
-### time.sleep_ms
+### time.Time.get_fmt_str
 ```v
-pub fn sleep_ms(milliseconds int) void
+fn (t Time) get_fmt_str(fmt_dlmtr FormatDelimiter, fmt_time FormatTime, fmt_date FormatDate) string
 ```
-sleep_ms makes the calling thread sleep for a given number of milliseconds.
-
-### time.usleep
-```v
-pub fn usleep(microseconds int) void
-```
-usleep makes the calling thread sleep for a given number of microseconds.
-
-### time.is_leap_year
-```v
-pub fn is_leap_year(year int) bool
-```
-is_leap_year checks if a given a year is a leap year.
-
-### time.days_in_month
-```v
-pub fn days_in_month(month, year int) ?int
-```
-days_in_month returns a number of days in a given month.
-
-### time.Time.str
-```v
-pub fn (t Time) str() string
-```
-str returns time in the same format as `parse` expects ("YYYY-MM-DD HH:MM:SS").
+get_fmt_str returns a date string with specified FormatDelimiter, 
+FormatTime type, and FormatDate type.
