@@ -4,17 +4,17 @@
 - [benchmark.Benchmark](#benchmarkbenchmark)
 - [benchmark.new_benchmark](#benchmarknew_benchmark)
 - [benchmark.new_benchmark_pointer](#benchmarknew_benchmark_pointer)
-- [benchmark.Benchmark.set_total_expected_steps](#benchmarkbenchmarkset_total_expected_steps)
-- [benchmark.Benchmark.stop](#benchmarkbenchmarkstop)
-- [benchmark.Benchmark.step](#benchmarkbenchmarkstep)
-- [benchmark.Benchmark.fail](#benchmarkbenchmarkfail)
-- [benchmark.Benchmark.ok](#benchmarkbenchmarkok)
-- [benchmark.Benchmark.skip](#benchmarkbenchmarkskip)
-- [benchmark.Benchmark.fail_many](#benchmarkbenchmarkfail_many)
-- [benchmark.Benchmark.ok_many](#benchmarkbenchmarkok_many)
-- [benchmark.Benchmark.neither_fail_nor_ok](#benchmarkbenchmarkneither_fail_nor_ok)
+- [benchmark.set_total_expected_steps](#benchmarkset_total_expected_steps)
+- [benchmark.stop](#benchmarkstop)
+- [benchmark.step](#benchmarkstep)
+- [benchmark.fail](#benchmarkfail)
+- [benchmark.ok](#benchmarkok)
+- [benchmark.skip](#benchmarkskip)
+- [benchmark.fail_many](#benchmarkfail_many)
+- [benchmark.ok_many](#benchmarkok_many)
+- [benchmark.neither_fail_nor_ok](#benchmarkneither_fail_nor_ok)
 - [benchmark.start](#benchmarkstart)
-- [benchmark.Benchmark.measure](#benchmarkbenchmarkmeasure)
+- [benchmark.measure](#benchmarkmeasure)
 - [benchmark.&Benchmark.step_message_with_label](#benchmarkbenchmarkstep_message_with_label)
 - [benchmark.&Benchmark.step_message](#benchmarkbenchmarkstep_message)
 - [benchmark.&Benchmark.step_message_ok](#benchmarkbenchmarkstep_message_ok)
@@ -50,39 +50,39 @@ fn new_benchmark() Benchmark
 ```v
 fn new_benchmark_pointer() &Benchmark
 ```
-### benchmark.Benchmark.set_total_expected_steps
+### benchmark.set_total_expected_steps
 ```v
 fn (b mut Benchmark) set_total_expected_steps(n int) void
 ```
-### benchmark.Benchmark.stop
+### benchmark.stop
 ```v
 fn (b mut Benchmark) stop() void
 ```
-### benchmark.Benchmark.step
+### benchmark.step
 ```v
 fn (b mut Benchmark) step() void
 ```
-### benchmark.Benchmark.fail
+### benchmark.fail
 ```v
 fn (b mut Benchmark) fail() void
 ```
-### benchmark.Benchmark.ok
+### benchmark.ok
 ```v
 fn (b mut Benchmark) ok() void
 ```
-### benchmark.Benchmark.skip
+### benchmark.skip
 ```v
 fn (b mut Benchmark) skip() void
 ```
-### benchmark.Benchmark.fail_many
+### benchmark.fail_many
 ```v
 fn (b mut Benchmark) fail_many(n int) void
 ```
-### benchmark.Benchmark.ok_many
+### benchmark.ok_many
 ```v
 fn (b mut Benchmark) ok_many(n int) void
 ```
-### benchmark.Benchmark.neither_fail_nor_ok
+### benchmark.neither_fail_nor_ok
 ```v
 fn (b mut Benchmark) neither_fail_nor_ok() void
 ```
@@ -90,7 +90,7 @@ fn (b mut Benchmark) neither_fail_nor_ok() void
 ```v
 fn start() Benchmark
 ```
-### benchmark.Benchmark.measure
+### benchmark.measure
 ```v
 fn (b mut Benchmark) measure(label string) i64
 ```

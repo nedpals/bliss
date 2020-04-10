@@ -25,18 +25,18 @@
 - [regex.F_BIN](#regexf_bin)
 - [regex.F_SRC](#regexf_src)
 - [regex.RE](#regexre)
-- [regex.RE.get_group](#regexreget_group)
-- [regex.RE.compile](#regexrecompile)
-- [regex.RE.get_code](#regexreget_code)
-- [regex.RE.get_query](#regexreget_query)
-- [regex.RE.match_base](#regexrematch_base)
+- [regex.get_group](#regexget_group)
+- [regex.compile](#regexcompile)
+- [regex.get_code](#regexget_code)
+- [regex.get_query](#regexget_query)
+- [regex.match_base](#regexmatch_base)
 - [regex.regex](#regexregex)
 - [regex.new_regex](#regexnew_regex)
 - [regex.new_regex_by_size](#regexnew_regex_by_size)
-- [regex.RE.match_string](#regexrematch_string)
-- [regex.RE.find](#regexrefind)
-- [regex.RE.find_all](#regexrefind_all)
-- [regex.RE.replace](#regexrereplace)
+- [regex.match_string](#regexmatch_string)
+- [regex.find](#regexfind)
+- [regex.find_all](#regexfind_all)
+- [regex.replace](#regexreplace)
 
 ## Documentation
 ### regex.V_REGEX_VERSION
@@ -188,11 +188,11 @@ fn (re RE) get_parse_error_string(err int) string
     query   string
 }
 ```
-### regex.RE.get_group
+### regex.get_group
 ```v
 fn (re RE) get_group(group_name string) (int, int)
 ```
-### regex.RE.compile
+### regex.compile
 ```v
 fn (re mut RE) compile(in_txt string) (int,int)
 ```
@@ -200,19 +200,19 @@ main compiler
  
 compile return (return code, index) where index is the index of the error in the query string if return code is an error code
 
-### regex.RE.get_code
+### regex.get_code
 ```v
 fn (re RE) get_code() string
 ```
 get_code return the compiled code as regex string, note: may be different from the source!
 
-### regex.RE.get_query
+### regex.get_query
 ```v
 fn (re RE) get_query() string
 ```
 get_query return a string with a reconstruction of the query starting from the regex program code
 
-### regex.RE.match_base
+### regex.match_base
 ```v
 fn (re mut RE) match_base(in_txt byteptr, in_txt_len int ) (int,int)
 ```
@@ -242,13 +242,13 @@ fn new_regex_by_size(mult int) RE
 ```
 new_regex_by_size create a REgex of large size, mult specify the scale factor of the memory that will be allocated
 
-### regex.RE.match_string
+### regex.match_string
 ```v
 fn (re mut RE) match_string(in_txt string) (int,int)
 ```
 Matchers
 
-### regex.RE.find
+### regex.find
 ```v
 fn (re mut RE) find(in_txt string) (int,int)
 ```
@@ -256,13 +256,13 @@ Finders
  
 find try to find the first match in the input string
 
-### regex.RE.find_all
+### regex.find_all
 ```v
 fn (re mut RE) find_all(in_txt string) []int
 ```
 find all the non overlapping occurrences of the match pattern
 
-### regex.RE.replace
+### regex.replace
 ```v
 fn (re mut RE) replace(in_txt string, repl string) string
 ```

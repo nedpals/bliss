@@ -52,7 +52,7 @@
 - [glfw.get_monitor_size](#glfwget_monitor_size)
 - [glfw.&glfw.Window.get_window_size](#glfwglfwwindowget_window_size)
 - [glfw.&glfw.Window.get_framebuffer_size](#glfwglfwwindowget_framebuffer_size)
-- [glfw.Size.str](#glfwsizestr)
+- [glfw.str](#glfwstr)
 - [glfw.get_window_user_pointer](#glfwget_window_user_pointer)
 
 ## Documentation
@@ -307,7 +307,7 @@ fn (w &glfw.Window) get_framebuffer_size() Size
 ```
 get_framebuffer_size in pixels
 
-### glfw.Size.str
+### glfw.str
 ```v
 fn (size Size) str() string
 ```

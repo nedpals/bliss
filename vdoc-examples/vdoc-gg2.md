@@ -6,7 +6,7 @@
 - [gg2.new_context](#ggnew_context)
 - [gg2.&GG.draw_text](#ggggdraw_text)
 - [gg2.&GG.draw_text_def](#ggggdraw_text_def)
-- [gg2.GG.init_font](#gggginit_font)
+- [gg2.init_font](#gginit_font)
 - [gg2.&GG.run](#ggggrun)
 - [gg2.&GG.draw_rect](#ggggdraw_rect)
 - [gg2.draw_rect](#ggdraw_rect)
@@ -63,7 +63,7 @@ fn (gg &GG) draw_text(x, y int, text string, cfg gx.TextCfg) void
 ```v
 fn (ctx &GG) draw_text_def(x, y int, text string) void
 ```
-### gg2.GG.init_font
+### gg2.init_font
 ```v
 fn (gg mut GG) init_font() void
 ```

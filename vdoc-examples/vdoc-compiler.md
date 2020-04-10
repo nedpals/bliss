@@ -34,8 +34,8 @@
 - vtmp.v
 ## Contents
 - [compiler.&Parser.save_state](#compilerparsersave_state)
-- [compiler.Parser.restore_state](#compilerparserrestore_state)
-- [compiler.Parser.add_text](#compilerparseradd_text)
+- [compiler.restore_state](#compilerrestore_state)
+- [compiler.add_text](#compileradd_text)
 
 ## Documentation
 ### compiler.&Parser.save_state
@@ -47,11 +47,11 @@ return
 } 
 println(s)
 
-### compiler.Parser.restore_state
+### compiler.restore_state
 ```v
 fn (p mut Parser) restore_state(state ParserState, scanner bool, cgen bool) void
 ```
-### compiler.Parser.add_text
+### compiler.add_text
 ```v
 fn (p mut Parser) add_text(text string) void
 ```

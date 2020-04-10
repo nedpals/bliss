@@ -1,12 +1,13 @@
 import { platform } from "process";
 import { SyntaxNode, Point } from "web-tree-sitter";
+import slash from "slash";
 
 export const osSuffixes: string[] = (() => {
     let included: string[] = [];
 
     switch (platform) {
         case 'win32':
-            included = ['_win', '_windows', '_nix'];
+            included = ['_windows', '_nix'];
             break;
         case 'freebsd':
         case 'netbsd':
@@ -46,4 +47,14 @@ export function isPositionAtRange(pos: Point, node: SyntaxNode): boolean {
     const withinRow = pos.row > node.startPosition.row && pos.row < node.endPosition.row;
 
     return withinCol && withinRow;
+}
+
+export function normalizePath(filepath: string): string {
+    let newFilepath = slash(filepath);
+
+    if (filepath.substring(0, 2).endsWith(':')) {
+        newFilepath = newFilepath.substring(0, 2).toUpperCase() + newFilepath.substring(2);
+    }
+
+    return newFilepath;
 }

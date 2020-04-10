@@ -5,8 +5,8 @@
 ## Contents
 - [rand.Pcg32](#randpcg)
 - [rand.new_pcg32](#randnew_pcg)
-- [rand.Pcg32.next](#randpcgnext)
-- [rand.Pcg32.bounded_next](#randpcgbounded_next)
+- [rand.next](#randnext)
+- [rand.bounded_next](#randbounded_next)
 
 ## Documentation
 ### rand.Pcg32
@@ -28,14 +28,14 @@ new_pcg32 - a Pcg32 PRNG generator
  @param initseq - the stream/step of the PRNG. 
  @return a new Pcg32 PRNG instance
 
-### rand.Pcg32.next
+### rand.next
 ```v
 fn (rng mut Pcg32) next() u32
 ```
 Pcg32.next - update the PRNG state and get back the next random number 
  @return the generated pseudo random number
 
-### rand.Pcg32.bounded_next
+### rand.bounded_next
 ```v
 fn (rng mut Pcg32) bounded_next(bound u32) u32
 ```

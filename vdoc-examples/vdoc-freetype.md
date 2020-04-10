@@ -4,11 +4,11 @@
 - [freetype.default_font_size](#freetypedefault_font_size)
 - [freetype.FreeType](#freetypefreetype)
 - [freetype.new_context](#freetypenew_context)
-- [freetype.FreeType.draw_text](#freetypefreetypedraw_text)
-- [freetype.FreeType.draw_text_def](#freetypefreetypedraw_text_def)
-- [freetype.FreeType.text_width](#freetypefreetypetext_width)
-- [freetype.FreeType.text_height](#freetypefreetypetext_height)
-- [freetype.FreeType.text_size](#freetypefreetypetext_size)
+- [freetype.draw_text](#freetypedraw_text)
+- [freetype.draw_text_def](#freetypedraw_text_def)
+- [freetype.text_width](#freetypetext_width)
+- [freetype.text_height](#freetypetext_height)
+- [freetype.text_size](#freetypetext_size)
 - [freetype.FT_Face.str](#freetypeft_facestr)
 - [freetype.[]Character.str](#freetypecharacterstr)
 
@@ -40,23 +40,23 @@
 ```v
 fn new_context(cfg gg.Cfg) &FreeType
 ```
-### freetype.FreeType.draw_text
+### freetype.draw_text
 ```v
 fn (ctx mut FreeType) draw_text(_x, _y int, text string, cfg gx.TextCfg) void
 ```
-### freetype.FreeType.draw_text_def
+### freetype.draw_text_def
 ```v
 fn (ctx mut FreeType) draw_text_def(x, y int, text string) void
 ```
-### freetype.FreeType.text_width
+### freetype.text_width
 ```v
 fn (ctx mut FreeType) text_width(s string) int
 ```
-### freetype.FreeType.text_height
+### freetype.text_height
 ```v
 fn (ctx mut FreeType) text_height(s string) int
 ```
-### freetype.FreeType.text_size
+### freetype.text_size
 ```v
 fn (ctx mut FreeType) text_size(s string) (int, int)
 ```

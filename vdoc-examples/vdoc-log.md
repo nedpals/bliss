@@ -8,17 +8,17 @@
 - [log.INFO](#loginfo)
 - [log.DEBUG](#logdebug)
 - [log.Log](#loglog)
-- [log.Log.set_level](#loglogset_level)
-- [log.Log.set_output_level](#loglogset_output_level)
-- [log.Log.set_full_logpath](#loglogset_full_logpath)
-- [log.Log.set_output_label](#loglogset_output_label)
-- [log.Log.set_output_path](#loglogset_output_path)
-- [log.Log.close](#loglogclose)
-- [log.Log.fatal](#loglogfatal)
-- [log.Log.error](#loglogerror)
-- [log.Log.warn](#loglogwarn)
-- [log.Log.info](#logloginfo)
-- [log.Log.debug](#loglogdebug)
+- [log.set_level](#logset_level)
+- [log.set_output_level](#logset_output_level)
+- [log.set_full_logpath](#logset_full_logpath)
+- [log.set_output_label](#logset_output_label)
+- [log.set_output_path](#logset_output_path)
+- [log.close](#logclose)
+- [log.fatal](#logfatal)
+- [log.error](#logerror)
+- [log.warn](#logwarn)
+- [log.info](#loginfo)
+- [log.debug](#logdebug)
 
 ## Documentation
 ### log.LogLevel
@@ -61,47 +61,47 @@
     output_file_name   string
 }
 ```
-### log.Log.set_level
+### log.set_level
 ```v
 fn (l mut Log) set_level(level int) void
 ```
-### log.Log.set_output_level
+### log.set_output_level
 ```v
 fn (l mut Log) set_output_level(level LogLevel) void
 ```
-### log.Log.set_full_logpath
+### log.set_full_logpath
 ```v
 fn (l mut Log) set_full_logpath(full_log_path string) void
 ```
-### log.Log.set_output_label
+### log.set_output_label
 ```v
 fn (l mut Log) set_output_label(label string) void
 ```
-### log.Log.set_output_path
+### log.set_output_path
 ```v
 fn (l mut Log) set_output_path(output_file_path string) void
 ```
-### log.Log.close
+### log.close
 ```v
 fn (l mut Log) close() void
 ```
-### log.Log.fatal
+### log.fatal
 ```v
 fn (l mut Log) fatal(s string) void
 ```
-### log.Log.error
+### log.error
 ```v
 fn (l mut Log) error(s string) void
 ```
-### log.Log.warn
+### log.warn
 ```v
 fn (l mut Log) warn(s string) void
 ```
-### log.Log.info
+### log.info
 ```v
 fn (l mut Log) info(s string) void
 ```
-### log.Log.debug
+### log.debug
 ```v
 fn (l mut Log) debug(s string) void
 ```

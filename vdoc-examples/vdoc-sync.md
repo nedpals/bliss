@@ -9,17 +9,17 @@
 - [sync.ThreadCB](#syncthreadcb)
 - [sync.PoolProcessorConfig](#syncpoolprocessorconfig)
 - [sync.new_pool_processor](#syncnew_pool_processor)
-- [sync.PoolProcessor.set_max_jobs](#syncpoolprocessorset_max_jobs)
-- [sync.PoolProcessor.work_on_items<T>](#syncpoolprocessorwork_on_itemst)
-- [sync.PoolProcessor.work_on_pointers](#syncpoolprocessorwork_on_pointers)
+- [sync.set_max_jobs](#syncset_max_jobs)
+- [sync.work_on_items<T>](#syncwork_on_itemst)
+- [sync.work_on_pointers](#syncwork_on_pointers)
 - [sync.&PoolProcessor.get_item<T>](#syncpoolprocessorget_itemt)
 - [sync.&PoolProcessor.get_string_item](#syncpoolprocessorget_string_item)
 - [sync.&PoolProcessor.get_int_item](#syncpoolprocessorget_int_item)
 - [sync.&PoolProcessor.get_result<T>](#syncpoolprocessorget_resultt)
 - [sync.&PoolProcessor.get_results<T>](#syncpoolprocessorget_resultst)
-- [sync.PoolProcessor.set_shared_context](#syncpoolprocessorset_shared_context)
+- [sync.set_shared_context](#syncset_shared_context)
 - [sync.&PoolProcessor.get_shared_context](#syncpoolprocessorget_shared_context)
-- [sync.PoolProcessor.set_thread_context](#syncpoolprocessorset_thread_context)
+- [sync.set_thread_context](#syncset_thread_context)
 - [sync.&PoolProcessor.get_thread_context](#syncpoolprocessorget_thread_context)
 
 ## Documentation
@@ -58,14 +58,14 @@ fn new_pool_processor(context PoolProcessorConfig) &PoolProcessor
 ```
 new_pool_processor returns a new PoolProcessor instance.
 
-### sync.PoolProcessor.set_max_jobs
+### sync.set_max_jobs
 ```v
 fn (pool mut PoolProcessor) set_max_jobs(njobs int) void
 ```
 set_max_jobs gives you the ability to override the number 
 of jobs *after* the PoolProcessor had been created already.
 
-### sync.PoolProcessor.work_on_items<T>
+### sync.work_on_items<T>
 ```v
 fn (pool mut PoolProcessor) work_on_items<T>(items []T) void
 ```
@@ -78,7 +78,7 @@ by the number of available cores on the system.
 work_on_items returns *after* all threads finish. 
 You can optionally call get_results after that.
 
-### sync.PoolProcessor.work_on_pointers
+### sync.work_on_pointers
 ```v
 fn (pool mut PoolProcessor) work_on_pointers(items []voidptr) void
 ```
@@ -115,7 +115,7 @@ fn (pool &PoolProcessor) get_results<T>() []T
 ```
 get_results - can be called to get a list of type safe results.
 
-### sync.PoolProcessor.set_shared_context
+### sync.set_shared_context
 ```v
 fn (pool mut PoolProcessor) set_shared_context(context voidptr) void
 ```
@@ -130,7 +130,7 @@ fn (pool &PoolProcessor) get_shared_context() voidptr
 get_shared_context - can be called in each worker callback, to get 
 the context set by pool.set_shared_context
 
-### sync.PoolProcessor.set_thread_context
+### sync.set_thread_context
 ```v
 fn (pool mut PoolProcessor) set_thread_context(idx int, context voidptr) void
 ```

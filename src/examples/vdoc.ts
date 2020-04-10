@@ -1,18 +1,10 @@
-import Parser from "web-tree-sitter";
-import { basename, join as path_join } from "path";
 import fs from "fs";
-import { 
-    Analyzer,
-    Importer,
-    isNodePublic,
-    buildComment, 
-    buildFnSignature, 
-    buildStructSignature, 
-    buildEnumSignature
-} from '../bliss';
+import { basename, join as path_join } from "path";
+import Parser from "web-tree-sitter";
+import { Analyzer, buildComment, buildSignature, Importer, isNodePublic } from '../bliss';
 
 
-async function vdoc(filepath: string) {
+export default async function vdoc(filepath: string) {
     let analyzer;
 
     try {
@@ -24,7 +16,7 @@ async function vdoc(filepath: string) {
         await analyzer.open(filepath);
 
         console.log('[vdoc] Generating docs for \'' + analyzer.getModuleName(filepath) + '\'...');
-        let modulePaths = await Importer.resolveModulePath(analyzer.getModuleName(filepath));
+        let modulePaths = await Importer.resolveModuleFilepaths(analyzer.getModuleName(filepath));
         const t = await analyzer.getTypeList(filepath, { includeModules: false });
         const fileContents: string[] = [];
 
@@ -61,19 +53,7 @@ async function vdoc(filepath: string) {
                 const linkName = mod + '.' + type;
                 
                 fileContents.push('### ' + linkName);
-                fileContents.push('```v');
-                if (props.type == 'function' || props.type == 'method') {
-                    fileContents.push(buildFnSignature(props.node as Parser.SyntaxNode));
-                }
-
-                if (props.type == 'struct') {
-                    fileContents.push(buildStructSignature(props.node as Parser.SyntaxNode));
-                }
-
-                if (props.type == 'enum') {
-                    fileContents.push(buildEnumSignature(props.node as Parser.SyntaxNode));
-                }
-                fileContents.push('```');
+                fileContents.push('```v\n' + buildSignature(props) + '\n```');
 
                 if (t[mod][type].node?.previousSibling?.type === "comment") {
                     fileContents.push(buildComment(props.node as Parser.SyntaxNode, true) + '\n');
@@ -85,7 +65,3 @@ async function vdoc(filepath: string) {
     }
 }
 
-['readline/readline.v', 'term/term.v', 'time/time.v', 'strconv/atoi.v', 'regex/regex.v', 'math/math.v', 'flag/flag.v', 'os/os.v', 'sqlite/sqlite.v', 'fontstash/fontstash.v'].forEach(j => {
-    vdoc(path_join(String.raw`C:\Users\admin\Documents\Coding\v\vlib`, j))
-        .then(() => {});
-});

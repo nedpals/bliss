@@ -1,9 +1,5 @@
 import Parser from "web-tree-sitter";
-export interface ParsedFiles {
-    [base_paths: string]: {
-        [filename: string]: Parser.Tree;
-    };
-}
+export declare type ParsedFiles = Map<string, Map<string, Parser.Tree>>;
 export interface ContentChanges {
     startIndex: number;
     startPos: Parser.Point;
@@ -20,11 +16,10 @@ export declare class TreeList {
     private trees;
     private parser;
     constructor(parser: Parser);
-    new(input: {
-        filepath: string;
-        source: string;
-    }): Promise<void>;
-    update(filepath: string, source: string, ...changes: ContentChanges[]): Promise<void>;
+    new(filepath: string, source: string): void;
+    update(filepath: string, source: string, ...changes: ContentChanges[]): void;
+    has(filepath: string): boolean;
     get(filepath: string): Parser.Tree;
+    delete(filepath: string): void;
     static getTreePath(filepath: string): string[];
 }

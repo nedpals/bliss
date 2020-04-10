@@ -1,390 +1,355 @@
 import Parser, { SyntaxNode } from "web-tree-sitter";
 import { buildFnSignature } from "./signatures";
 import { Analyzer } from "./analyzer";
-import { SymbolKind } from "./symbols";
+import { SymbolKind, CompletionItemKind } from "./symbols";
+import { normalizePath } from "./utils";
 
-export interface TypeProperties {
-    type: string,
+export type Symbols = Map<string, Map<string, Symbol>>;
+
+interface ParsedSymbol {
     name: string,
-    file?: string,
-    children?: { 
-        [name: string]: TypeProperties
-    },
-    parent?: TypeProperties,
-    node?: Parser.SyntaxNode,
-    returnType: string,
-    symbolKind: SymbolKind
+    sym: Symbol
 }
 
-export interface Types { 
-    [moduleName: string]: { 
-        [name: string]: TypeProperties
+export class Symbol {
+    name: string;
+    file: string;
+    type: string;
+    children: Map<string, Symbol> = new Map();
+    parent: Symbol;
+    node: Parser.SyntaxNode;
+    returnType: string;
+    symbolKind: SymbolKind;
+    completionItemKind: CompletionItemKind;
+    module: string;
+    isMut: boolean = false;
+    isPublic: boolean = false;
+
+    constructor(name: string, type: string) {
+        this.name = name;
+        this.type = type;
     }
 }
 
-interface ParsedType {
-    name: string,
-    props: TypeProperties
-}
-
-export class TypeMap {
+export class SymbolMap {
     private node: Parser.SyntaxNode;
     private filepath: string;
-    private types: Types = {};
+    symbols: Symbols = new Map();
     moduleName: string;
     
-    constructor(filepath: string, node: Parser.SyntaxNode) {
-        this.filepath = filepath;
+    constructor(filepath: string, node: Parser.SyntaxNode, autogenerate: boolean = true) {
+        this.filepath = normalizePath(filepath);
         this.node = node;
         this.moduleName = Analyzer.getModuleNameFromNode(this.node.tree.rootNode);
+        if (autogenerate) this.generate();
     }
 
-    setNode(node: Parser.SyntaxNode) {
-        this.node = node;
-    }
-
-    getAll(): Types {
-        return this.types;
-    }
-
-    get(key: string): TypeProperties {
-        return this.types[this.moduleName][key];
-    }
-
-    set(key: string, props: TypeProperties) {
-        this.types[this.moduleName][key] = props;
-    }
-
-    insertParent(key: string, prop: TypeProperties) {
-        const type = this.get(key);
-
-        if (typeof type.parent == "undefined") {
-            //@ts-ignore
-            this.types[this.moduleName][key].parent = {};
-        }
-
-        //@ts-ignore
-        this.types[this.moduleName][key].parent[prop.name] = prop;
-    }
+    has = (moduleName: string): boolean => this.symbols.has(moduleName);
+    setNode(node: Parser.SyntaxNode) { this.node = node; }
+    setFile(filepath: string) { this.filepath = filepath; }
+    get = (key: string): Symbol => this.symbols.get(this.moduleName).get(key);
+    getFrom = (moduleName: string): Map<string, Symbol> => this.symbols.get(moduleName);
+    getAll = (): Symbols => this.symbols;
+    set = (key: string, sym: Symbol) => { this.symbols.get(this.moduleName).set(key, sym); }
+    insertParent = (key: string, sym: Symbol) => { this.symbols.get(this.moduleName).get(key).parent = sym; }
  
-    register(pType: ParsedType): void {    
-        const {name, props} = pType;
-        props.file = this.filepath;
+    register({ name, sym }: ParsedSymbol): void {    
+        sym.file = this.filepath;
+        sym.module = this.moduleName;
 
-        if (typeof props.children == "undefined") {
-            props.children = {};
-        }
-        
-        if (Object.keys(this.types).indexOf(this.moduleName) == -1) {
-            this.types[this.moduleName] = {};
+        if (!this.symbols.has(this.moduleName)) {
+            this.symbols.set(this.moduleName, new Map());
         }
 
-        this.types[this.moduleName][name] = props;
+        this.set(name, sym);
     }
 
-    registerChild(pType: ParsedType, parent: string) {
-        const {name, props} = pType;
-        props.file = this.filepath;
-
-        (this.types[this.moduleName][parent].children as { [name: string]: TypeProperties })[name] = props;
+    registerChild(pSym: ParsedSymbol, parent: string) {
+        this.registerChildToProp(pSym, this.symbols.get(this.moduleName).get(parent));
     }
 
-    generate(log: boolean = false): void {
-        for (let node of this.node.children) {
-            if (log == true) {
-                console.log(node.type);
+    registerChildToProp({name, sym}: ParsedSymbol, parent: Symbol) {
+        sym.file = this.filepath;
+        sym.module = this.moduleName;
+        parent.children.set(name, sym);
+    }
+
+    getPublicSymbols(except?: string): Symbols {
+        const filtered: Symbols = new Map();
+
+        for (const moduleName of this.symbols.keys()) {
+            filtered.set(moduleName, moduleName === except ? this.symbols.get(moduleName) : new Map());
+            if (moduleName === except) continue; 
+            for (const sym of this.symbols.get(moduleName)) {
+                if (!sym[1].isPublic) continue;
+                filtered.get(moduleName).set(...sym);
             }
+        }
+
+        return filtered;
+    }
+
+    generate(exclude: string[] = []): void {
+        for (let i = 0; i < this.node.children.length; i++) {
+            const node = this.node.children[i];
 
             switch (node.type) {
                 case 'interface_declaration':
-                    const ifaceProp = this.parseInterface(node);
-                    this.register(ifaceProp);
-                    this.parseInterfaceMethods(ifaceProp)
-                        .map(n => {
-                            this.parseFunctionParameters(n)
-                                .forEach(p => {
-                                    console.log(p);
-
-                                    n.props.file = this.filepath;
-                                    (n.props.children as { [n: string]: TypeProperties })[p.name] = p.props;
-                                });
-
-                            return n;
-                        })
-                        .forEach(n => {
-                            this.registerChild(n, ifaceProp.name);
-                        });
+                    if (exclude.includes('interface')) continue;
+                    const iface = this.parseInterface(node);
+                    const iFaceMethods = this.parseInterfaceMethods(iface);
+                    for (let i = 0; i < iFaceMethods.length; i++) {
+                        iFaceMethods[i].sym.file = this.filepath;
+                        iFaceMethods[i].sym.module = this.moduleName;
+                        const params = this.parseFunctionParameters(iFaceMethods[i]);
+                        for (let j = 0; i < params.length; j++) {
+                            iFaceMethods[i].sym.children.set(params[j].name, params[j].sym);
+                            this.registerChildToProp(params[j], iface.sym);
+                        }
+                    }
+                    this.register(iface); break;
                 case 'const_declaration':
-                    this.parseConstants(node)
-                        .forEach(n => {
-                            this.register(n);
-                        });
+                    if (exclude.includes('constant')) continue;
+                    const constants = this.parseConstants(node);
+                    for (let i = 0; i < constants.length; i++) {
+                        this.register(constants[i]);
+                    }
                     break;
                 case 'type_declaration':
-                    this.register(this.parseTypedef(node));
-                    break;
+                    if (exclude.includes('typedef')) continue;
+                    this.register(this.parseTypedef(node)); break;
                 case 'short_var_declaration':
-                    this.register(this.parseVariable(node));
-                    break;
+                    if (exclude.includes('variable')) continue;
+                    this.register(this.parseVariable(node)); break;
                 case 'struct_declaration':
-                    const structProp = this.parseStruct(node);
-                    this.register(structProp);
-                    this.parseStructFields(structProp).forEach(n => { this.registerChild(n, structProp.name) });
-                    break;
+                    if (exclude.includes('struct')) continue;
+                    const struct = this.parseStruct(node);
+                    const structMethods = this.parseStructFields(struct);
+                    for (let i = 0; i < structMethods.length; i++) {
+                        this.registerChildToProp(structMethods[i], struct.sym);
+                    }
+                    this.register(struct); break;
                 case 'enum_declaration':
-                    const enumProp = this.parseEnum(node);
-                    this.register(enumProp);
-                    this.parseEnumValues(enumProp).forEach(n => { this.registerChild(n, enumProp.name) });
-                    break;
+                    if (exclude.includes('enum')) continue;
+                    const enm = this.parseEnum(node);
+                    const enmMembers = this.parseEnumValues(enm);
+                    for (let i = 0; i < enmMembers.length; i++) {
+                        this.registerChildToProp(enmMembers[i], enm.sym);
+                    }
+                    this.register(enm); break;
                 case 'method_declaration':
-                    const methodProp = this.parseFunction(node);
-                    this.parseMethodReceiver(methodProp);
-                    break;
+                    if (exclude.includes('method')) continue;
+                    const [method, receiver] = this.parseMethod(this.parseFunction(node));
+                    const mParams = this.parseFunctionParameters(method);
+                    for (let i = 0; i < mParams.length; i++) {
+                        this.registerChildToProp(mParams[i], method.sym);
+                    }
+                    this.registerChildToProp(receiver, method.sym);
+                    this.register(method); break;
                 case 'function_declaration':
-                    const functionProp = this.parseFunction(node);
-                    this.register(functionProp);
-                    this.parseFunctionParameters(functionProp).forEach(n => {
-                        this.registerChild(n, functionProp.name)
-                    });
-                    break;
-                // case ' ':
-                //     break;
-                default:
-                    break;
+                    if (exclude.includes('function')) continue;
+                    const fn = this.parseFunction(node);
+                    const fnParams = this.parseFunctionParameters(fn);
+                    for (let i = 0; i < fnParams.length; i++) {
+                        this.registerChildToProp(fnParams[i], fn.sym);
+                    }
+                    this.register(fn); break;
+                default: break;
             }
         }
     }
 
-    identifyType(node: Parser.SyntaxNode | null): string {
-        
+    static get basicTypes() { return ['bool', 'string', 'rune', 'i8', 'byte', 'i16', 'u16', 'int', 'u32', 'i64', 'u64'] };
+
+    static identify(node: Parser.SyntaxNode, customTypes: string[] = []): string {
         let type = '';
         
-        const custom_types = Object.keys(this.types).filter(s => {
-            return typeof this.types[this.moduleName][s] !== "undefined" && this.types[this.moduleName][s].type !== "function";
-        });
-        const basic_types = ['bool', 'string', 'rune', 'i8', 'byte', 'i16', 'u16', 'int', 'u32', 'i64', 'u64', ...new Set(custom_types)];
+        const basicTypes = [...SymbolMap.basicTypes, new Set(customTypes)];
     
         switch (node?.type) {
             case 'pointer_type':
                 let pointer_type = node?.children[0];
-                type = this.identifyType(pointer_type);
+                type = SymbolMap.identify(pointer_type, customTypes);
                 break;
             case 'interpreted_string_literal':
             case 'raw_string_literal':
-                type = 'string';
-                break;
+                type = 'string'; break;
             case 'int_literal':
-                type = 'int';
-                break;
+                type = 'int'; break;
             case 'float_literal':
-                type = 'f32';
-                break;
+                type = 'f32'; break;
             case 'rune_literal':
-                type = 'rune';
-                break;
+                type = 'rune'; break;
             case 'if_statement':
                 let consequence = findChildByType(node, "consequence");
-                type = this.identifyType(consequence as Parser.SyntaxNode);
+                type = SymbolMap.identify(consequence, customTypes);
                 break;
             case 'binary_expression':
-                type = this.identifyType(node.children[0] as Parser.SyntaxNode);
+                type = SymbolMap.identify(node.children[0], customTypes);
                 break;
             case 'slice_expression':
-                type = '';
-                break;
+                // TODO: Slice
+                type = ''; break;
             case 'array_type':
                 let array_item = node.namedChildren[0];
-                let array_type = this.identifyType(array_item);
-                type = `[]${array_type}`
-                break;
+                let array_type = SymbolMap.identify(array_item, customTypes);
+                type = `[]${array_type}`; break;
             case 'map_type':
                 let key = node?.childForFieldName('key');
-                let key_type = this.identifyType(key as Parser.SyntaxNode);
+                let key_type = SymbolMap.identify(key, customTypes);
                 let value = node?.childForFieldName('value');
-                let value_type = this.identifyType(value as Parser.SyntaxNode);
-                type = `map[${key_type}]${value_type}`;
-                break;
+                let value_type = SymbolMap.identify(value, customTypes);
+                type = `map[${key_type}]${value_type}`; break;
             case 'type_conversion_expression':
                 let type_name = node?.childForFieldName('type');
-                type = type_name?.text as string;
-                break;
+                type = type_name?.text; break;
             case 'call_expression':
-                const fn_name = node?.childForFieldName('function');
-                const _fnn = fn_name?.text as string;
-                // // console.log(fn_name?.startIndex + ': ' + fn_name?.type);
-                if (fn_name?.type === "selector_expression") {
-                    type = this.identifyType(fn_name);
-                } else {
-                    type = basic_types.includes(_fnn) ? _fnn : 'void';
-                    // typesmap[_fnn].type ??
-                }
+                const fnName = node?.childForFieldName('function');
+                const _fnn = fnName?.text;
+                type = fnName?.type === "selector_expression" ? 
+                        SymbolMap.identify(fnName, customTypes) :
+                        basicTypes.includes(_fnn) ? _fnn : 'void';
                 break;
             case 'struct_declaration':
-                type = 'struct';
-                break;
+                type = 'struct'; break;
             case 'enum_declaration':
-                type = 'enum';       
-                break;    
+                type = 'enum'; break;    
             case 'option_type':
-                let base_type = findChildByType(node, "type_identifier");
-                type = `?${base_type?.text}`;
-                break;
+                let baseType = findChildByType(node, "type_identifier");
+                type = `?${baseType?.text}`; break;
             case 'composite_literal':
-                type = node?.childForFieldName('type')?.text as string;
+                type = node?.childForFieldName('type')?.text;
                 break;
             case 'function_declaration':
             case 'method_declaration':
-                type = buildFnSignature(node, false);
-                break;
+                type = buildFnSignature(node, false); break;
             case 'selector_expression':
-                let s_name = node?.childForFieldName('operand')?.text as string;
-                let f_name = node?.childForFieldName('field')?.text as string;
-                //@ts-ignore
-                // type = typesmap[s_name].fields[f_name] || 'undefined';
-                // // console.log(s_name + ': ' + f_name);
-                type = 'void';
-                break;
+            case 'index_expression':
+            case 'slice_expression':
+                // TODO: Figure out the return type of the last selector expression.
+                type = node.text; break;
             case 'false':
             case 'true':
-                type = 'bool';
-                break;
+                type = 'bool'; break;
             case 'qualified_type':
             case 'type_identifier':
-                type = node?.text as string;
+                type = node?.text; break;
+            case 'casting_expression':
+            case 'type_conversion_expression':
+                type = node?.childForFieldName('type').text;
                 break;
-            // case ' ':
-            //     type = 'undefined';
-            //     break;
             default:  
-                type = 'unknown';
-                break;  
+                type = 'unknown'; break;  
         }
     
         return type;
     }
 
-    // TODO: Parse Sum types
-    parseTypedef(node: Parser.SyntaxNode): ParsedType {
-        const spec = findChildByType(node, 'type_spec');
-        const typeName = spec?.childForFieldName('name')?.text as string;
-        const originalType = this.identifyType(spec?.childForFieldName('type') as SyntaxNode);
-    
-        return {
-            name: typeName, 
-            props: {
-                type: 'alias_' + originalType,
-                name: typeName,
-                node,
-                returnType: typeName,
-                symbolKind: SymbolKind.Object
-            }
-        };
-    }
-    
-    parseFunction(node: Parser.SyntaxNode): ParsedType {
-        let functionName = node.childForFieldName('name')?.text as string;
-        let functionReturnType = node?.childForFieldName('result')?.text as string || 'void';
+    identifyType(node: Parser.SyntaxNode): string {        
+        const customTypes: string[] = (() => {
+            const filtered = [];
 
-        let functionProps: TypeProperties = {
-            type: `function`,
-            name: functionName,
-            node,
-            returnType: functionReturnType,
-            symbolKind: SymbolKind.Function,
-            children: {}
-        };
-    
-        return {
-            name: functionName,
-            props: functionProps
-        };
+            for (const s in this.symbols.get(this.moduleName)) {
+                if (this.getFrom(this.moduleName).has(s) && this.get(s).type === "function") continue;
+                filtered.push(s);   
+            }
+
+            return filtered;
+        })();
+        
+        return SymbolMap.identify(node, customTypes);
+    }
+
+    // TODO: Parse Sum types
+    parseTypedef(node: Parser.SyntaxNode): ParsedSymbol {
+        const spec = findChildByType(node, 'type_spec');
+        const typeName = spec?.childForFieldName('name')?.text;
+        const originalType = this.identifyType(spec?.childForFieldName('type'));
+        const sym = new Symbol(typeName, originalType);
+
+        sym.isPublic = node.firstNamedChild.type === "pub_keyword";
+        sym.node = node;
+        sym.returnType = typeName;
+        sym.symbolKind = SymbolKind.Object;
+        sym.completionItemKind = CompletionItemKind.Keyword;
+
+        return { name: typeName, sym };
     }
     
-    parseMethodReceiver(pType: ParsedType): void {
-        const node = pType.props.node as Parser.SyntaxNode;
+    parseFunction(node: Parser.SyntaxNode): ParsedSymbol {
+        let functionName = node.childForFieldName('name')?.text as string;
+        let functionReturnType = node?.childForFieldName('result')?.text || 'void';
+        let sym: Symbol = new Symbol(functionName, 'function');
+
+        sym.isPublic = node.firstNamedChild.type === "pub_keyword";
+        sym.node = node;
+        sym.returnType = functionReturnType;
+        sym.symbolKind = SymbolKind.Function;
+        sym.completionItemKind = CompletionItemKind.Function;
+    
+        return { name: functionName, sym };
+    }
+    
+    parseMethod(pSym: ParsedSymbol): ParsedSymbol[] {
+        const node = pSym.sym.node;
         const receiver = node.childForFieldName('receiver');
         const receiverDeclList = findChildByType(receiver, 'parameter_declaration');
-        const originalType = receiverDeclList?.childForFieldName('type')?.text as string;
+        const originalType = receiverDeclList.childForFieldName('type')?.text;
+        const receiverName = receiverDeclList.childForFieldName('name')?.text;
         const methodName = node.childForFieldName('name')?.text
 
-        pType.props.type = "method";
-        pType.props.symbolKind = SymbolKind.Method;
+        pSym.sym.type = "method";
+        pSym.sym.symbolKind = SymbolKind.Method;
+        pSym.name = originalType + '.' + methodName;
+        pSym.sym.name = pSym.name;
 
-        // TODO: How to store struct methods
-        pType.name = originalType + '.' + methodName;
-        pType.props.name = pType.name; 
-        
-        if (typeof this.types[this.moduleName] !== "undefined" && typeof this.get(originalType) !== "undefined") {
-            pType.props.parent = this.get(originalType);
+        const receiverSym: Symbol = new Symbol(receiverName, "method_receiver");
+        receiverSym.node = receiver;
+        receiverSym.returnType = originalType;
+        receiverSym.symbolKind = SymbolKind.Variable;
+        receiverSym.completionItemKind = CompletionItemKind.Variable;
+    
+        const receiverPSym: ParsedSymbol = {
+            name: receiverName,
+            sym: receiverSym
         }
-        
-        this.register(pType);
-        this.parseFunctionParameters(pType).forEach(n => {
-            this.registerChild(n, pType.name)
-        });
+
+        return [pSym, receiverPSym];
     }
 
-    // parseMethodParameters(pType: ParsedType): ParsedType[] {
-    //     const node = pType.props.node as Parser.SyntaxNode;
-    //     const receiver = node.childForFieldName('receiver');
-    //     const declarationList = findChildByType(receiver, 'parameter_declaration');
-    //     const originalType = declarationList?.childForFieldName('type');
-    //     let originalTypeName = originalType?.text as string;
-        
-    //     // if (this.moduleName !== "main") {
-    //     //     orig_type_name = this.moduleName + '.' + (orig_type?.text as string);
-    //     // }
-        
-    //     if (originalType?.type === 'qualified_type') {
-    //         originalTypeName = originalType.text;
-    //     }
-        
-    //     if (typeof this.get(originalTypeName) !== "undefined") {
-    //         this.get(orig_type_name).methods?.set(fn_name as string, fn_props)
-    //     }
-    // }
-
-    parseFunctionParameters(pType: ParsedType): ParsedType[] {
-        const node = pType.props.node as Parser.SyntaxNode;
+    parseFunctionParameters(pSym: ParsedSymbol): ParsedSymbol[] {
+        const node = pSym.sym.node as Parser.SyntaxNode;
         const parameterList = node.childForFieldName('parameters')?.children || [];
-        const parsedFnParameters: ParsedType[] = [];
+        const parsedFnParameters: ParsedSymbol[] = [];
 
         for (let pd of parameterList) {
-            let paramName = pd.childForFieldName('name')?.text as string;
+            let paramName = pd.childForFieldName('name')?.text;
             if (typeof paramName == "undefined") { continue; }
             // TODO: Use `this.identifyType` for locating types
-            const paramDataType = pd.childForFieldName('type')?.text as string;
-            paramName = pType.name + '~' + paramName;
-            const props: TypeProperties = {
-                name: paramName,
-                type: "parameter",
-                node: pd,
-                parent: pType.props,
-                returnType: paramDataType,
-                symbolKind: SymbolKind.Variable
-            }
+            const paramDataType = pd.childForFieldName('type')?.text;
+            const sym: Symbol = new Symbol(paramName, "parameter");
+            sym.node = pd;
+            sym.parent = pSym.sym;
+            sym.returnType = paramDataType;
+            sym.symbolKind = SymbolKind.Variable;
+            sym.completionItemKind = CompletionItemKind.Variable;
 
-            parsedFnParameters.push({ name: paramName, props });
+            parsedFnParameters.push({ name: paramName, sym });
         }
 
         return parsedFnParameters;
     }
 
-    parseFunctionBody(pType: ParsedType): ParsedType[] {
-        const parsedFunctionBody: ParsedType[] = [];
-        const node = pType.props.node as Parser.SyntaxNode;
+    parseFunctionBody(pSym: ParsedSymbol): ParsedSymbol[] {
+        const parsedFunctionBody: ParsedSymbol[] = [];
+        const node = pSym.sym.node as Parser.SyntaxNode;
         const body = node.childForFieldName('body')?.children;
-
-        if (typeof body == "undefined") {
-            return parsedFunctionBody;
-        }
+        if (typeof body == "undefined") return [];
 
         for (let i = 0; i < body.length; i++) {
             let e = body[i];
-
-            if (typeof e === "undefined" || e?.type !== "short_var_declaration") { 
-                continue;
-            }
+            if (typeof e === "undefined") continue;
+            if (e?.type === "short_var_declaration") continue;
             
             parsedFunctionBody.push(this.parseVariable(e));
         }
@@ -392,167 +357,159 @@ export class TypeMap {
         return parsedFunctionBody;
     }
 
-    parseInterface(node: Parser.SyntaxNode): ParsedType {
+    parseInterface(node: Parser.SyntaxNode): ParsedSymbol {
         const interfaceName = findChildByType(node, 'type_identifier')?.text as string;
-        const interfaceProp: TypeProperties = {
-            type: 'interface',
-            name: interfaceName,
-            node,
-            returnType: 'interface',
-            symbolKind: SymbolKind.Interface
-        }
+        const sym: Symbol = new Symbol(interfaceName, "interface");
+        sym.node = node;
+        sym.returnType = "interface";
+        sym.symbolKind = SymbolKind.Interface;
+        sym.completionItemKind = CompletionItemKind.Interface;
+        sym.isPublic = node.firstNamedChild.type === "pub_keyword";
 
-        return {
-            name: interfaceName,
-            props: interfaceProp
-        }
+        return { name: interfaceName, sym };
     }
 
-    parseInterfaceMethods(pType: ParsedType): ParsedType[] {
-        const methodSpecList = findChildByType(pType.props.node as Parser.SyntaxNode, "method_spec_list")?.children || [];
-        const parsedInterfaceMethods: ParsedType[] = [];
+    parseInterfaceMethods(pSym: ParsedSymbol): ParsedSymbol[] {
+        const methodSpecList = findChildByType(pSym.sym.node as Parser.SyntaxNode, "method_spec_list")?.children || [];
+        const parsedInterfaceMethods: ParsedSymbol[] = [];
 
-        for (let ms of methodSpecList) {
-            // console.log(ms.text);
-            let name = ms.childForFieldName('name')?.text;
+        for (let i = 0; i < methodSpecList.length; i++) {
+            const ms = methodSpecList[i];
+            const name = ms.childForFieldName('name')?.text;
             if (typeof name === "undefined") { continue; }
-            const returnType = ms.childForFieldName('result')?.text as string;
+            const returnType = ms.childForFieldName('result')?.text;
+            const sym: Symbol = new Symbol(name, "interface_method");
+            sym.node = ms;
+            sym.parent = pSym.sym;
+            sym.returnType = returnType;
+            sym.symbolKind = SymbolKind.Field;
+            sym.completionItemKind = CompletionItemKind.Field;
+            sym.isPublic = pSym.sym.isPublic;
 
-            let props: TypeProperties = {
-                name,
-                type: 'interface_method',
-                node: ms,
-                parent: pType.props,
-                returnType: returnType,
-                symbolKind: SymbolKind.Field,
-                children: {}
-            };
-
-            parsedInterfaceMethods.push({ name, props });
+            parsedInterfaceMethods.push({ name, sym });
         }
 
         return parsedInterfaceMethods;
     }
 
-    parseConstants(node: Parser.SyntaxNode): ParsedType[] {
-        const constants: ParsedType[] = [];
+    parseConstants(node: Parser.SyntaxNode): ParsedSymbol[] {
+        const constants: ParsedSymbol[] = [];
 
-        node.children.forEach(c => {
-            const name = c.childForFieldName('name')?.text as string;
-            if (typeof name === "undefined") { return; }
+        for (let i = 0; i < node.namedChildren.length; i++) {
+            const c = node.children[i];
+            const name = c.childForFieldName('name')?.text;
+            if (typeof name === "undefined") { continue; }
             const data = c.childForFieldName('value')?.firstChild;
             const dataType = this.identifyType(data as Parser.SyntaxNode);
-            const constProps: TypeProperties = {
-                type: 'constant',
-                name,
-                node,
-                returnType: dataType as string,
-                symbolKind: SymbolKind.Constant
-            };
+            const sym: Symbol = new Symbol(name, "constant");
+            sym.isPublic = node.firstNamedChild.type === "pub_keyword";
+            sym.node = node;
+            sym.returnType = dataType;
+            sym.symbolKind = SymbolKind.Constant;
+            sym.completionItemKind = CompletionItemKind.Constant;
 
-            constants.push({ name, props: constProps });
-        });
+            constants.push({ name, sym });
+        }
 
         return constants;
     }
 
-    parseStruct(node: Parser.SyntaxNode): ParsedType {
-        const structName = findChildByType(node, "type_identifier")?.text as string;    
-        return {
-            name: structName, 
-            props: {
-                name: structName,
-                type: 'struct',
-                node,
-                returnType: structName,
-                symbolKind: SymbolKind.Struct,
-                children: {}
-            }
-        };
+    parseStruct(node: Parser.SyntaxNode): ParsedSymbol {
+        const structName = findChildByType(node, "type_identifier")?.text as string;   
+        const sym: Symbol = new Symbol(structName, "struct");
+        sym.isPublic = node.firstNamedChild.type === "pub_keyword";
+        sym.node = node;
+        sym.returnType = structName;
+        sym.symbolKind = SymbolKind.Struct;
+        sym.completionItemKind = CompletionItemKind.Struct;
+        
+        return { name: structName, sym };
     }
 
-    parseStructFields(pType: ParsedType): ParsedType[] {
-        const declarationList = findChildByType(pType.props.node as Parser.SyntaxNode, "field_declaration_list")?.children || [];
-        const parsedStructFields: ParsedType[] = [];
+    parseStructFields(pSym: ParsedSymbol): ParsedSymbol[] {
+        const declarationList = findChildByType(pSym.sym.node, "field_declaration_list")?.namedChildren || [];
+        const parsedStructFields: ParsedSymbol[] = [];
+        let isPublic = false;
+        let isMutable = false;
 
-        // TODO: Register struct fields
-        for (let fd of declarationList) {
-            let name = fd.childForFieldName('name')?.text;
-            // const structFieldType = this.identifyType(fd.childForFieldName('type') as Parser.SyntaxNode);
-            const structFieldType = fd.childForFieldName('type')?.text as string;
+        if (declarationList.length !== 0 && declarationList[0].type === "field_scopes") {
+            const scopes = declarationList[0].namedChildren.map(c => c.type);
+            const isGlobal = declarationList[0].children.map(c => c.text).includes('__global');
+
+            if (scopes.includes('mut_keyword')) isMutable = true;
+            if (scopes.includes('pub_keyword')) isPublic = true;
+            if (isGlobal) {
+                isMutable = true;
+                isPublic = true;
+            }
+        }
+
+
+        for (let i = 0; i < declarationList.length; i++) {
+            const fd = declarationList[i];
+            const name = fd.childForFieldName('name')?.text;
+            const structFieldType = fd.childForFieldName('type')?.text;
             if (typeof name === "undefined") { continue; }
-            // // console.log('[parseStructFields] parent of field '+ name +' is ' + pType.props.name);
+            const sym: Symbol = new Symbol(name, "struct_field");
+            sym.node = fd;
+            sym.parent = pSym.sym;
+            sym.returnType = structFieldType;
+            sym.symbolKind = SymbolKind.Field;
+            sym.completionItemKind = CompletionItemKind.Field;
+            sym.isMut = isMutable;
+            sym.isPublic = isPublic;
 
-            const props: TypeProperties = {
-                name,
-                type: 'struct_field',
-                node: fd,
-                parent: pType.props,
-                returnType: structFieldType,
-                symbolKind: SymbolKind.Field
-            };
-
-            parsedStructFields.push({ name, props });
+            parsedStructFields.push({ name, sym });
         }
 
         return parsedStructFields;
     }
     
-    parseVariable(node: Parser.SyntaxNode, pType?: ParsedType): ParsedType {
-        let variableName = node.childForFieldName('left')?.text as string;
-        const data = node.childForFieldName('right');
-        const dataType = this.identifyType(data as Parser.SyntaxNode);
-        const variableProps: TypeProperties = {
-            type: 'variable',
-            name: variableName,
-            node,
-            returnType: dataType as string,
-            symbolKind: SymbolKind.Variable
-        };
+    parseVariable(node: Parser.SyntaxNode, pSym?: ParsedSymbol): ParsedSymbol {
+        const varName = node.childForFieldName('left')?.text;
+        const dataNode = node.childForFieldName('right');
+        const dataType = this.identifyType(dataNode);
+        const sym: Symbol = new Symbol(varName, "variable");
+        sym.node = node;
+        sym.returnType = dataType;
+        sym.symbolKind = SymbolKind.Variable;
+        sym.completionItemKind = CompletionItemKind.Variable;
     
-        if (typeof pType !== "undefined") {
-            variableProps.parent = pType.props;
+        if (typeof pSym !== "undefined") {
+            sym.parent = pSym.sym;
         }
 
-        return {
-            name: variableName, 
-            props: variableProps
-        };
+        return { name: varName, sym };
     }
     
-    parseEnum(node: Parser.SyntaxNode) : ParsedType {
-        const enum_name = findChildByType(node, "type_identifier")?.text as string;
+    parseEnum(node: Parser.SyntaxNode) : ParsedSymbol {
+        const enumName = findChildByType(node, "type_identifier")?.text;
+        const sym: Symbol = new Symbol(enumName, "enum");
+        sym.node = node;
+        sym.returnType = "enum";
+        sym.symbolKind = SymbolKind.Enum;
+        sym.completionItemKind = CompletionItemKind.Enum;
+        sym.isPublic = node.firstNamedChild.type === "pub_keyword";
 
-        return {
-            name: enum_name, 
-            props: {
-                name: enum_name,
-                type: 'enum',
-                node,
-                returnType: 'enum',
-                symbolKind: SymbolKind.Enum,
-                children: {}
-            }
-        };
+        return { name: enumName, sym };
     }
 
-    parseEnumValues(pType: ParsedType): ParsedType[] {
-        const parsedEnumValues: ParsedType[] = [];
-        const declarationList = findChildByType(pType.props.node as Parser.SyntaxNode, "enum_declaration_list")?.children || [];
+    parseEnumValues(pSym: ParsedSymbol): ParsedSymbol[] {
+        const parsedEnumValues: ParsedSymbol[] = [];
+        const declarationList = findChildByType(pSym.sym.node, "enum_declaration_list")?.children || [];
 
-        for (let fd of declarationList) {
-            let name = fd.childForFieldName('name')?.text as string;
+        for (let i = 0; i < declarationList.length; i++) {
+            const fd = declarationList[i];
+            const name = fd.childForFieldName('name')?.text;
+            const sym: Symbol = new Symbol(name, "enum_member");
+            sym.node = fd;
+            sym.parent = pSym.sym;
+            sym.returnType = "int";
+            sym.symbolKind = SymbolKind.EnumMember;
+            sym.isPublic = pSym.sym.isPublic;
+            sym.completionItemKind = CompletionItemKind.EnumMember;
 
-            const props: TypeProperties = {
-                name,
-                type: 'enum_member',
-                node: fd,
-                parent: pType.props,
-                returnType: 'int',
-                symbolKind: SymbolKind.EnumMember
-            };
-
-            parsedEnumValues.push({ name, props });
+            parsedEnumValues.push({ name, sym });
         }
 
         return parsedEnumValues;

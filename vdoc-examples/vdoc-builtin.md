@@ -14,19 +14,19 @@
 ## Contents
 - [builtin.array](#builtinarray)
 - [builtin.make](#builtinmake)
-- [builtin.array.repeat](#builtinarrayrepeat)
-- [builtin.array.sort_with_compare](#builtinarraysort_with_compare)
-- [builtin.array.insert](#builtinarrayinsert)
-- [builtin.array.prepend](#builtinarrayprepend)
-- [builtin.array.delete](#builtinarraydelete)
-- [builtin.array.clear](#builtinarrayclear)
-- [builtin.array.trim](#builtinarraytrim)
-- [builtin.array.first](#builtinarrayfirst)
-- [builtin.array.last](#builtinarraylast)
+- [builtin.repeat](#builtinrepeat)
+- [builtin.sort_with_compare](#builtinsort_with_compare)
+- [builtin.insert](#builtininsert)
+- [builtin.prepend](#builtinprepend)
+- [builtin.delete](#builtindelete)
+- [builtin.clear](#builtinclear)
+- [builtin.trim](#builtintrim)
+- [builtin.first](#builtinfirst)
+- [builtin.last](#builtinlast)
 - [builtin.&array.clone](#builtinarrayclone)
-- [builtin.array.push_many](#builtinarraypush_many)
-- [builtin.array.reverse](#builtinarrayreverse)
-- [builtin.array.free](#builtinarrayfree)
+- [builtin.push_many](#builtinpush_many)
+- [builtin.reverse](#builtinreverse)
+- [builtin.free](#builtinfree)
 - [builtin.[]string.str](#builtinstringstr)
 - [builtin.[]int.str](#builtinintstr)
 - [builtin.[]bool.str](#builtinboolstr)
@@ -42,7 +42,7 @@
 - [builtin.compare_i64](#builtincompare_i)
 - [builtin.compare_f64](#builtincompare_f)
 - [builtin.compare_f32](#builtincompare_f)
-- [builtin.array.pointers](#builtinarraypointers)
+- [builtin.pointers](#builtinpointers)
 
 ## Documentation
 ### builtin.array
@@ -60,19 +60,19 @@ fn make(len int, cap int, elm_size int) array
 ```
 TODO
 
-### builtin.array.repeat
+### builtin.repeat
 ```v
 fn (a array) repeat(count int) array
 ```
 repeat returns new array with the given array elements repeated given times.
 
-### builtin.array.sort_with_compare
+### builtin.sort_with_compare
 ```v
 fn (a mut array) sort_with_compare(compare voidptr) void
 ```
 array.sort sorts array in-place using given `compare` function as comparator
 
-### builtin.array.insert
+### builtin.insert
 ```v
 fn (a mut array) insert(i int, val voidptr) void
 ```
@@ -83,7 +83,7 @@ i := 3
 a.insert(0, &i) 
 ----------------------------
 
-### builtin.array.prepend
+### builtin.prepend
 ```v
 fn (a mut array) prepend(val voidptr) void
 ```
@@ -91,32 +91,32 @@ TODO array.prepend is broken
 It depends on array.insert 
 -----------------------------
 
-### builtin.array.delete
+### builtin.delete
 ```v
 fn (a mut array) delete(i int) void
 ```
 array.delete deletes array element at the given index
 
-### builtin.array.clear
+### builtin.clear
 ```v
 fn (a mut array) clear() void
 ```
 clears the array without deallocating the allocated data
 
-### builtin.array.trim
+### builtin.trim
 ```v
 fn (a mut array) trim(index int) void
 ```
 trims the array length to "index" without modifying the allocated data. If "index" is greater 
 than len nothing will be changed
 
-### builtin.array.first
+### builtin.first
 ```v
 fn (a array) first() voidptr
 ```
 array.first returns the first element of the array
 
-### builtin.array.last
+### builtin.last
 ```v
 fn (a array) last() voidptr
 ```
@@ -128,24 +128,26 @@ fn (a &array) clone() array
 ```
 array.clone returns an independent copy of a given array
 
-### builtin.array.push_many
+### builtin.push_many
 ```v
 fn (a3 mut array) push_many(val voidptr, size int) void
 ```
 `val` is array.data 
 TODO make private, right now it's used by strings.Builder
 
-### builtin.array.reverse
+### builtin.reverse
 ```v
 fn (a array) reverse() array
 ```
 array.reverse returns a new array with the elements of 
 the original array in reverse order.
 
-### builtin.array.free
+### builtin.free
 ```v
 fn (a array) free() void
 ```
+pub fn (a []int) free() {
+
 ### builtin.[]string.str
 ```v
 fn (a []string) str() string
@@ -288,7 +290,7 @@ fn compare_f32(a, b &f32) int
 compare_f32 for []f32 sort_with_compare() 
 ref. compare_i64(...)
 
-### builtin.array.pointers
+### builtin.pointers
 ```v
 fn (a array) pointers() []voidptr
 ```

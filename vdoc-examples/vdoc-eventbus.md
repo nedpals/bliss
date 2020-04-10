@@ -9,11 +9,11 @@
 - [eventbus.&EventBus.publish](#eventbuseventbuspublish)
 - [eventbus.&EventBus.clear_all](#eventbuseventbusclear_all)
 - [eventbus.&EventBus.has_subscriber](#eventbuseventbushas_subscriber)
-- [eventbus.Subscriber.subscribe](#eventbussubscribersubscribe)
-- [eventbus.Subscriber.subscribe_method](#eventbussubscribersubscribe_method)
-- [eventbus.Subscriber.subscribe_once](#eventbussubscribersubscribe_once)
+- [eventbus.subscribe](#eventbussubscribe)
+- [eventbus.subscribe_method](#eventbussubscribe_method)
+- [eventbus.subscribe_once](#eventbussubscribe_once)
 - [eventbus.&Subscriber.is_subscribed](#eventbussubscriberis_subscribed)
-- [eventbus.Subscriber.unsubscribe](#eventbussubscriberunsubscribe)
+- [eventbus.unsubscribe](#eventbusunsubscribe)
 
 ## Documentation
 ### eventbus.EventHandlerFn
@@ -58,17 +58,17 @@ fn (eb &EventBus) clear_all() void
 ```v
 fn (eb &EventBus) has_subscriber(name string) bool
 ```
-### eventbus.Subscriber.subscribe
+### eventbus.subscribe
 ```v
 fn (s mut Subscriber) subscribe(name string, handler EventHandlerFn) void
 ```
 Subscriber Methods
 
-### eventbus.Subscriber.subscribe_method
+### eventbus.subscribe_method
 ```v
 fn (s mut Subscriber) subscribe_method(name string, handler EventHandlerFn, receiver voidptr) void
 ```
-### eventbus.Subscriber.subscribe_once
+### eventbus.subscribe_once
 ```v
 fn (s mut Subscriber) subscribe_once(name string, handler EventHandlerFn) void
 ```
@@ -76,7 +76,7 @@ fn (s mut Subscriber) subscribe_once(name string, handler EventHandlerFn) void
 ```v
 fn (s &Subscriber) is_subscribed(name string) bool
 ```
-### eventbus.Subscriber.unsubscribe
+### eventbus.unsubscribe
 ```v
 fn (s mut Subscriber) unsubscribe(name string, handler EventHandlerFn) void
 ```

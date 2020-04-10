@@ -4,28 +4,28 @@
 - [bitfield.BitField](#bitfieldbitfield)
 - [bitfield.from_bytes](#bitfieldfrom_bytes)
 - [bitfield.from_string](#bitfieldfrom_string)
-- [bitfield.BitField.string](#bitfieldbitfieldstring)
-- [bitfield.BitField.setbit](#bitfieldbitfieldsetbit)
-- [bitfield.BitField.clearbit](#bitfieldbitfieldclearbit)
-- [bitfield.BitField.setall](#bitfieldbitfieldsetall)
-- [bitfield.BitField.clearall](#bitfieldbitfieldclearall)
-- [bitfield.BitField.togglebit](#bitfieldbitfieldtogglebit)
+- [bitfield.string](#bitfieldstring)
+- [bitfield.setbit](#bitfieldsetbit)
+- [bitfield.clearbit](#bitfieldclearbit)
+- [bitfield.setall](#bitfieldsetall)
+- [bitfield.clearall](#bitfieldclearall)
+- [bitfield.togglebit](#bitfieldtogglebit)
 - [bitfield.bfand](#bitfieldbfand)
 - [bitfield.bfnot](#bitfieldbfnot)
 - [bitfield.bfor](#bitfieldbfor)
 - [bitfield.bfxor](#bitfieldbfxor)
 - [bitfield.join](#bitfieldjoin)
 - [bitfield.print](#bitfieldprint)
-- [bitfield.BitField.getsize](#bitfieldbitfieldgetsize)
+- [bitfield.getsize](#bitfieldgetsize)
 - [bitfield.clone](#bitfieldclone)
 - [bitfield.cmp](#bitfieldcmp)
-- [bitfield.BitField.popcount](#bitfieldbitfieldpopcount)
+- [bitfield.popcount](#bitfieldpopcount)
 - [bitfield.hamming](#bitfieldhamming)
-- [bitfield.BitField.pos](#bitfieldbitfieldpos)
-- [bitfield.BitField.slice](#bitfieldbitfieldslice)
-- [bitfield.BitField.reverse](#bitfieldbitfieldreverse)
-- [bitfield.BitField.resize](#bitfieldbitfieldresize)
-- [bitfield.BitField.rotate](#bitfieldbitfieldrotate)
+- [bitfield.pos](#bitfieldpos)
+- [bitfield.slice](#bitfieldslice)
+- [bitfield.reverse](#bitfieldreverse)
+- [bitfield.resize](#bitfieldresize)
+- [bitfield.rotate](#bitfieldrotate)
 
 ## Documentation
 ### bitfield.BitField
@@ -60,38 +60,38 @@ fn from_string(input string) BitField
 from_string() converts a string of characters ('0' and '1') to a bit 
 array. Any character different from '0' is treated as '1'.
 
-### bitfield.BitField.string
+### bitfield.string
 ```v
 fn (input BitField) string() string
 ```
 string() converts the bit array to a string of characters ('0' and '1') and 
 return the string
 
-### bitfield.BitField.setbit
+### bitfield.setbit
 ```v
 fn (instance mut BitField) setbit(bitnr int) void
 ```
 setbit() set bit number 'bit_nr' to 1 (count from 0)
 
-### bitfield.BitField.clearbit
+### bitfield.clearbit
 ```v
 fn (instance mut BitField) clearbit(bitnr int) void
 ```
 clearbit() clears (sets to zero) bit number 'bit_nr' (count from 0)
 
-### bitfield.BitField.setall
+### bitfield.setall
 ```v
 fn (instance mut BitField) setall() void
 ```
 setall() sets all bits in the array to 1
 
-### bitfield.BitField.clearall
+### bitfield.clearall
 ```v
 fn (instance mut BitField) clearall() void
 ```
 clearall() clears (sets to zero) all bits in the array
 
-### bitfield.BitField.togglebit
+### bitfield.togglebit
 ```v
 fn (instance mut BitField) togglebit(bitnr int) void
 ```
@@ -141,7 +141,7 @@ fn print(instance BitField) void
 print(instance BitField) send the content of a bit array to stdout as a 
 string of characters ('0' and '1').
 
-### bitfield.BitField.getsize
+### bitfield.getsize
 ```v
 fn (instance BitField) getsize() int
 ```
@@ -160,7 +160,7 @@ fn cmp(input1 BitField, input2 BitField) bool
 cmp() compare two bit arrays bit by bit and return 'true' if they are 
 identical by length and contents and 'false' otherwise.
 
-### bitfield.BitField.popcount
+### bitfield.popcount
 ```v
 fn (instance BitField) popcount() int
 ```
@@ -172,34 +172,31 @@ fn hamming(input1 BitField, input2 BitField) int
 ```
 hamming () compute the Hamming distance between two bit arrays.
 
-### bitfield.BitField.pos
+### bitfield.pos
 ```v
 fn (haystack BitField) pos(needle BitField) int
 ```
 pos() checks if the array contains a sub-array 'needle' and returns its 
 position if it does, -1 if it does not, and -2 on error.
 
-### bitfield.BitField.slice
+### bitfield.slice
 ```v
 fn (input BitField) slice(_start int, _end int) BitField
 ```
 slice() return a sub-array of bits between 'start_bit_nr' (included) and 
 'end_bit_nr' (excluded)
 
-### bitfield.BitField.reverse
+### bitfield.reverse
 ```v
 fn (instance BitField) reverse() BitField
 ```
-reverse() reverses the order of bits in the array (swap the first with the 
-last, the second with the last but one and so on)
-
-### bitfield.BitField.resize
+### bitfield.resize
 ```v
 fn (instance mut BitField) resize(new_size int) void
 ```
 resize changes the size of the bit array to 'new_size'
 
-### bitfield.BitField.rotate
+### bitfield.rotate
 ```v
 fn (instance BitField) rotate(offset int) BitField
 ```

@@ -35,9 +35,9 @@
 - [gx.ALIGN_RIGHT](#gxalign_right)
 - [gx.TextCfg](#gxtextcfg)
 - [gx.Image](#gximage)
-- [gx.Image.is_empty](#gximageis_empty)
-- [gx.Color.str](#gxcolorstr)
-- [gx.Color.eq](#gxcoloreq)
+- [gx.is_empty](#gxis_empty)
+- [gx.str](#gxstr)
+- [gx.eq](#gxeq)
 - [gx.rgb](#gxrgb)
 - [gx.hex](#gxhex)
 
@@ -195,15 +195,15 @@
     height   int
 }
 ```
-### gx.Image.is_empty
+### gx.is_empty
 ```v
 fn (img Image) is_empty() bool
 ```
-### gx.Color.str
+### gx.str
 ```v
 fn (c Color) str() string
 ```
-### gx.Color.eq
+### gx.eq
 ```v
 fn (a Color) eq(b Color) bool
 ```

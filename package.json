@@ -5,10 +5,12 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "watch": "tsc --watch --project tsconfig.json"
+    "watch": "tsc --watch --project tsconfig.json",
+    "vdoc-vlib": "npm run build && node ./dist/examples/vdoc-vlib.js"
   },
   "dependencies": {
     "glob": "^7.1.6",
+    "slash": "^3.0.0",
     "tree-sitter-v": "^1.0.4",
     "web-tree-sitter": "^0.16.0",
     "which": "^2.0.2"

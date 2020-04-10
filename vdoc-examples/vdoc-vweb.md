@@ -12,14 +12,14 @@
 - [vweb.MAX_HTTP_POST_SIZE](#vwebmax_http_post_size)
 - [vweb.Default_Port](#vwebdefault_port)
 - [vweb.Context](#vwebcontext)
-- [vweb.Context.html](#vwebcontexthtml)
-- [vweb.Context.text](#vwebcontexttext)
-- [vweb.Context.json](#vwebcontextjson)
-- [vweb.Context.redirect](#vwebcontextredirect)
-- [vweb.Context.not_found](#vwebcontextnot_found)
-- [vweb.Context.set_cookie](#vwebcontextset_cookie)
+- [vweb.html](#vwebhtml)
+- [vweb.text](#vwebtext)
+- [vweb.json](#vwebjson)
+- [vweb.redirect](#vwebredirect)
+- [vweb.not_found](#vwebnot_found)
+- [vweb.set_cookie](#vwebset_cookie)
 - [vweb.&Context.get_cookie](#vwebcontextget_cookie)
-- [vweb.Context.add_header](#vwebcontextadd_header)
+- [vweb.add_header](#vwebadd_header)
 - [vweb.&Context.get_header](#vwebcontextget_header)
 - [vweb.foo<T>](#vwebfoot)
 - [vweb.run<T>](#vwebrunt)
@@ -77,27 +77,27 @@
     done   bool
 }
 ```
-### vweb.Context.html
+### vweb.html
 ```v
 fn (ctx mut Context) html(s string) void
 ```
-### vweb.Context.text
+### vweb.text
 ```v
 fn (ctx mut Context) text(s string) void
 ```
-### vweb.Context.json
+### vweb.json
 ```v
 fn (ctx mut Context) json(s string) void
 ```
-### vweb.Context.redirect
+### vweb.redirect
 ```v
 fn (ctx mut Context) redirect(url string) void
 ```
-### vweb.Context.not_found
+### vweb.not_found
 ```v
 fn (ctx mut Context) not_found(s string) void
 ```
-### vweb.Context.set_cookie
+### vweb.set_cookie
 ```v
 fn (ctx mut Context) set_cookie(key, val string) void
 ```
@@ -105,7 +105,7 @@ fn (ctx mut Context) set_cookie(key, val string) void
 ```v
 fn (ctx &Context) get_cookie(key string) ?string
 ```
-### vweb.Context.add_header
+### vweb.add_header
 ```v
 fn (ctx mut Context) add_header(key, val string) void
 ```

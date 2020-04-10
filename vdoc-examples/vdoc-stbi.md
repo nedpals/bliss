@@ -4,8 +4,8 @@
 - [stbi.Image](#stbiimage)
 - [stbi.load](#stbiload)
 - [stbi.load_from_memory](#stbiload_from_memory)
-- [stbi.Image.free](#stbiimagefree)
-- [stbi.Image.tex_image_2d](#stbiimagetex_image_d)
+- [stbi.free](#stbifree)
+- [stbi.tex_image_2d](#stbitex_image_d)
 - [stbi.set_flip_vertically_on_load](#stbiset_flip_vertically_on_load)
 
 ## Documentation
@@ -30,11 +30,11 @@ fn load_from_memory(buf byteptr) Image
 ```
 ub fn load_from_memory(buf []byte) Image {
 
-### stbi.Image.free
+### stbi.free
 ```v
 fn (img Image) free() void
 ```
-### stbi.Image.tex_image_2d
+### stbi.tex_image_2d
 ```v
 fn (img Image) tex_image_2d() void
 ```

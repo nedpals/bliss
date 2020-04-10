@@ -5,11 +5,11 @@
 - version.v
 ## Contents
 - [cli.Command](#clicommand)
-- [cli.Command.full_name](#clicommandfull_name)
-- [cli.Command.root](#clicommandroot)
-- [cli.Command.add_command](#clicommandadd_command)
-- [cli.Command.add_flag](#clicommandadd_flag)
-- [cli.Command.parse](#clicommandparse)
+- [cli.full_name](#clifull_name)
+- [cli.root](#cliroot)
+- [cli.add_command](#cliadd_command)
+- [cli.add_flag](#cliadd_flag)
+- [cli.parse](#cliparse)
 
 ## Documentation
 ### cli.Command
@@ -29,23 +29,23 @@
     args   []string
 }
 ```
-### cli.Command.full_name
+### cli.full_name
 ```v
 fn (cmd Command) full_name() string
 ```
-### cli.Command.root
+### cli.root
 ```v
 fn (cmd Command) root() Command
 ```
-### cli.Command.add_command
+### cli.add_command
 ```v
 fn (cmd mut Command) add_command(command Command) void
 ```
-### cli.Command.add_flag
+### cli.add_flag
 ```v
 fn (cmd mut Command) add_flag(flag Flag) void
 ```
-### cli.Command.parse
+### cli.parse
 ```v
 fn (cmd mut Command) parse(args []string) void
 ```

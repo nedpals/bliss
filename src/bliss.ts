@@ -1,8 +1,8 @@
 import { Analyzer } from './analyzer';
 import { Importer } from './importer';
 import { TreeList, ContentChanges } from './trees';
-import { TypeMap, TypeProperties, Types } from './types';
-import { buildComment, buildEnumSignature, buildFnSignature, buildStructSignature } from './signatures';
+import { SymbolMap, Symbol, Symbols } from './types';
+import { buildComment, buildEnumSignature, buildFnSignature, buildStructSignature, buildSignature } from './signatures';
 import { SymbolKind, CompletionItemKind } from './symbols';
 import { excludedOSSuffixes, isNodePublic, osSuffixes } from './utils';
 
@@ -13,6 +13,7 @@ export {
     buildEnumSignature,
     buildFnSignature,
     buildStructSignature,
+    buildSignature,
     CompletionItemKind,
     ContentChanges,
     SymbolKind,
@@ -20,7 +21,7 @@ export {
     isNodePublic,
     osSuffixes,
     TreeList,
-    TypeMap,
-    TypeProperties,
-    Types,
+    SymbolMap,
+    Symbol,
+    Symbols,
 };

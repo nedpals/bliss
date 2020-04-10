@@ -113,10 +113,15 @@ path-is-absolute@^1.0.0:
   resolved "https://registry.yarnpkg.com/path-is-absolute/-/path-is-absolute-1.0.1.tgz#174b9268735534ffbc7ace6bf53a5a9e1b5c5f5f"
   integrity sha1-F0uSaHNVNP+8es5r9TpanhtcX18=
 
-tree-sitter-v@^1.0.3:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/tree-sitter-v/-/tree-sitter-v-1.0.4.tgz#0488e0c06d30a550a4fd948f4332b005cd833ca1"
-  integrity sha512-WCX5Rpfg0QUePITXw+s4H7QpcyI0uAe2S2Hh6EVrSSvOhnz0lpvG/t6Np9fyBxXYgrw36h3uDnCRZ1/EIC9CBw==
+slash@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/slash/-/slash-3.0.0.tgz#6539be870c165adbd5240220dbe361f1bc4d4634"
+  integrity sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==
+
+tree-sitter-v@^1.0.4:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/tree-sitter-v/-/tree-sitter-v-1.0.5.tgz#983ffbebc8af175bb2c272990ecf98dcfd8d01af"
+  integrity sha512-EeW4+zv8V/xORtWQyKfFoDu/QWNRz/jY0tcclg708Xg3e8JEUi34i0gJDJ1oZ/eZc1m6qWT24SBspMVk4F1Pmw==
   dependencies:
     nan "^2.14.0"
 

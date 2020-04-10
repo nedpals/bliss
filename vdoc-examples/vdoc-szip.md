@@ -2,19 +2,19 @@
 - szip.v
 ## Contents
 - [szip.open](#szipopen)
-- [szip.zip_ptr.close](#szipzip_ptrclose)
-- [szip.zip_ptr.open_entry](#szipzip_ptropen_entry)
-- [szip.zip_ptr.close_entry](#szipzip_ptrclose_entry)
-- [szip.zip_ptr.name](#szipzip_ptrname)
-- [szip.zip_ptr.index](#szipzip_ptrindex)
-- [szip.zip_ptr.isdir](#szipzip_ptrisdir)
-- [szip.zip_ptr.size](#szipzip_ptrsize)
-- [szip.zip_ptr.crc32](#szipzip_ptrcrc)
-- [szip.zip_ptr.write_entry](#szipzip_ptrwrite_entry)
-- [szip.zip_ptr.create_entry](#szipzip_ptrcreate_entry)
-- [szip.zip_ptr.read_entry](#szipzip_ptrread_entry)
-- [szip.zip_ptr.extract_entry](#szipzip_ptrextract_entry)
-- [szip.zip_ptr.total](#szipzip_ptrtotal)
+- [szip.close](#szipclose)
+- [szip.open_entry](#szipopen_entry)
+- [szip.close_entry](#szipclose_entry)
+- [szip.name](#szipname)
+- [szip.index](#szipindex)
+- [szip.isdir](#szipisdir)
+- [szip.size](#szipsize)
+- [szip.crc32](#szipcrc)
+- [szip.write_entry](#szipwrite_entry)
+- [szip.create_entry](#szipcreate_entry)
+- [szip.read_entry](#szipread_entry)
+- [szip.extract_entry](#szipextract_entry)
+- [szip.total](#sziptotal)
 
 ## Documentation
 ### szip.open
@@ -32,7 +32,7 @@ open opens zip archive with compression level using the given mode.
  
  @return the zip archive handler or NULL on error
 
-### szip.zip_ptr.close
+### szip.close
 ```v
 fn (z mut zip_ptr) close() void
 ```
@@ -40,7 +40,7 @@ close closes the zip archive, releases resources - always finalize.
  
  @param zip zip archive handler.
 
-### szip.zip_ptr.open_entry
+### szip.open_entry
 ```v
 fn (zentry mut zip_ptr) open_entry(name string) bool
 ```
@@ -55,7 +55,7 @@ open_entry opens an entry by name in the zip archive.
  
  @return the return code - 0 on success, negative number (< 0) on error.
 
-### szip.zip_ptr.close_entry
+### szip.close_entry
 ```v
 fn (zentry mut zip_ptr) close_entry() void
 ```
@@ -65,7 +65,7 @@ close_entry closes a zip entry, flushes buffer and releases resources.
  
  @return the return code - 0 on success, negative number (< 0) on error.
 
-### szip.zip_ptr.name
+### szip.name
 ```v
 fn (zentry mut zip_ptr) name() string
 ```
@@ -82,7 +82,7 @@ name returns a local name of the current zip entry.
  
  @return the pointer to the current zip entry name, or NULL on error.
 
-### szip.zip_ptr.index
+### szip.index
 ```v
 fn (zentry mut zip_ptr) index() ?int
 ```
@@ -92,7 +92,7 @@ index returns an index of the current zip entry.
  
  @return the index on success, negative number (< 0) on error.
 
-### szip.zip_ptr.isdir
+### szip.isdir
 ```v
 fn (zentry mut zip_ptr) isdir() ?bool
 ```
@@ -103,7 +103,7 @@ isdir determines if the current zip entry is a directory entry.
  @return the return code - 1 (true), 0 (false), negative number (< 0) on 
          error.
 
-### szip.zip_ptr.size
+### szip.size
 ```v
 fn (zentry mut zip_ptr) size() i64
 ```
@@ -113,7 +113,7 @@ size returns an uncompressed size of the current zip entry.
  
  @return the uncompressed size in bytes.
 
-### szip.zip_ptr.crc32
+### szip.crc32
 ```v
 fn (zentry mut zip_ptr) crc32() u32
 ```
@@ -123,7 +123,7 @@ crc32 returns CRC-32 checksum of the current zip entry.
  
  @return the CRC-32 checksum.
 
-### szip.zip_ptr.write_entry
+### szip.write_entry
 ```v
 fn (zentry mut zip_ptr) write_entry(data []byte) bool
 ```
@@ -135,7 +135,7 @@ write_entry compresses an input buffer for the current zip entry.
  
  @return the return code - 0 on success, negative number (< 0) on error.
 
-### szip.zip_ptr.create_entry
+### szip.create_entry
 ```v
 fn (zentry mut zip_ptr) create_entry(name string) bool
 ```
@@ -146,7 +146,7 @@ create_entry compresses a file for the current zip entry.
  
  @return the return code - 0 on success, negative number (< 0) on error.
 
-### szip.zip_ptr.read_entry
+### szip.read_entry
 ```v
 fn (zentry mut zip_ptr) read_entry() ?voidptr
 ```
@@ -164,7 +164,7 @@ read_entry extracts the current zip entry into output buffer.
  @return the return code - the number of bytes actually read on success. 
          Otherwise a -1 on error.
 
-### szip.zip_ptr.extract_entry
+### szip.extract_entry
 ```v
 fn (zentry mut zip_ptr) extract_entry(path string) bool
 ```
@@ -175,7 +175,7 @@ extract_entry extracts the current zip entry into output file.
  
  @return the return code - 0 on success, negative number (< 0) on error.
 
-### szip.zip_ptr.total
+### szip.total
 ```v
 fn (zentry mut zip_ptr) total() ?int
 ```

@@ -3,7 +3,7 @@
 - utils.v
 ## Contents
 - [gg.Vec2](#ggvec)
-- [gg.Vec2.str](#ggvecstr)
+- [gg.str](#ggstr)
 - [gg.vec2](#ggvec)
 - [gg.init_gg](#gginit_gg)
 - [gg.Cfg](#ggcfg)
@@ -19,7 +19,7 @@
 - [gg.set_mode_fill](#ggset_mode_fill)
 - [gg.&GG.draw_rect2](#ggggdraw_rect)
 - [gg.post_empty_event](#ggpost_empty_event)
-- [gg.GG.circle](#ggggcircle)
+- [gg.circle](#ggcircle)
 - [gg.&GG.create_image](#ggggcreate_image)
 - [gg.create_image](#ggcreate_image)
 - [gg.create_image_from_memory](#ggcreate_image_from_memory)
@@ -41,7 +41,7 @@
     y   int
 }
 ```
-### gg.Vec2.str
+### gg.str
 ```v
 fn (v Vec2) str() string
 ```
@@ -165,7 +165,7 @@ gl.set_ebo(ebo, indices, C.GL_STATIC_DRAW)
 ```v
 fn post_empty_event() void
 ```
-### gg.GG.circle
+### gg.circle
 ```v
 fn (c GG) circle(x, y, r int) void
 ```

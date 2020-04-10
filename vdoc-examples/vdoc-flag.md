@@ -2,34 +2,34 @@
 - flag.v
 ## Contents
 - [flag.Flag](#flagflag)
-- [flag.Flag.str](#flagflagstr)
+- [flag.str](#flagstr)
 - [flag.[]Flag.str](#flagflagstr)
 - [flag.FlagParser](#flagflagparser)
 - [flag.SPACE](#flagspace)
 - [flag.UNDERLINE](#flagunderline)
 - [flag.MAX_ARGS_NUMBER](#flagmax_args_number)
 - [flag.new_flag_parser](#flagnew_flag_parser)
-- [flag.FlagParser.application](#flagflagparserapplication)
-- [flag.FlagParser.version](#flagflagparserversion)
-- [flag.FlagParser.description](#flagflagparserdescription)
-- [flag.FlagParser.skip_executable](#flagflagparserskip_executable)
-- [flag.FlagParser.bool_opt](#flagflagparserbool_opt)
-- [flag.FlagParser.bool](#flagflagparserbool)
-- [flag.FlagParser.int_multi](#flagflagparserint_multi)
-- [flag.FlagParser.int_opt](#flagflagparserint_opt)
-- [flag.FlagParser.int](#flagflagparserint)
-- [flag.FlagParser.float_multi](#flagflagparserfloat_multi)
-- [flag.FlagParser.float_opt](#flagflagparserfloat_opt)
-- [flag.FlagParser.float](#flagflagparserfloat)
-- [flag.FlagParser.string_multi](#flagflagparserstring_multi)
-- [flag.FlagParser.string_opt](#flagflagparserstring_opt)
-- [flag.FlagParser.string](#flagflagparserstring)
-- [flag.FlagParser.limit_free_args_to_at_least](#flagflagparserlimit_free_args_to_at_least)
-- [flag.FlagParser.limit_free_args_to_exactly](#flagflagparserlimit_free_args_to_exactly)
-- [flag.FlagParser.limit_free_args](#flagflagparserlimit_free_args)
-- [flag.FlagParser.arguments_description](#flagflagparserarguments_description)
-- [flag.FlagParser.usage](#flagflagparserusage)
-- [flag.FlagParser.finalize](#flagflagparserfinalize)
+- [flag.application](#flagapplication)
+- [flag.version](#flagversion)
+- [flag.description](#flagdescription)
+- [flag.skip_executable](#flagskip_executable)
+- [flag.bool_opt](#flagbool_opt)
+- [flag.bool](#flagbool)
+- [flag.int_multi](#flagint_multi)
+- [flag.int_opt](#flagint_opt)
+- [flag.int](#flagint)
+- [flag.float_multi](#flagfloat_multi)
+- [flag.float_opt](#flagfloat_opt)
+- [flag.float](#flagfloat)
+- [flag.string_multi](#flagstring_multi)
+- [flag.string_opt](#flagstring_opt)
+- [flag.string](#flagstring)
+- [flag.limit_free_args_to_at_least](#flaglimit_free_args_to_at_least)
+- [flag.limit_free_args_to_exactly](#flaglimit_free_args_to_exactly)
+- [flag.limit_free_args](#flaglimit_free_args)
+- [flag.arguments_description](#flagarguments_description)
+- [flag.usage](#flagusage)
+- [flag.finalize](#flagfinalize)
 
 ## Documentation
 ### flag.Flag
@@ -86,7 +86,7 @@ Usage example:
  ``` 
 data object storing information about a defined flag
 
-### flag.Flag.str
+### flag.str
 ```v
 fn (f Flag) str() string
 ```
@@ -128,38 +128,38 @@ fn new_flag_parser(args []string) &FlagParser
 create a new flag set for parsing command line arguments 
 TODO use INT_MAX some how
 
-### flag.FlagParser.application
+### flag.application
 ```v
 fn (fs mut FlagParser) application(name string) void
 ```
 change the application name to be used in 'usage' output
 
-### flag.FlagParser.version
+### flag.version
 ```v
 fn (fs mut FlagParser) version(vers string) void
 ```
 change the application version to be used in 'usage' output
 
-### flag.FlagParser.description
+### flag.description
 ```v
 fn (fs mut FlagParser) description(desc string) void
 ```
 change the application version to be used in 'usage' output
 
-### flag.FlagParser.skip_executable
+### flag.skip_executable
 ```v
 fn (fs mut FlagParser) skip_executable() void
 ```
 in most cases you do not need the first argv for flag parsing
 
-### flag.FlagParser.bool_opt
+### flag.bool_opt
 ```v
 fn (fs mut FlagParser) bool_opt(name string, abbr byte, usage string) ?bool
 ```
 bool_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
-### flag.FlagParser.bool
+### flag.bool
 ```v
 fn (fs mut FlagParser) bool(name string, abbr byte, bdefault bool, usage string) bool
 ```
@@ -171,21 +171,21 @@ defining and parsing a bool flag
 version with abbr 
 ODO error handling for invalid string to bool conversion
 
-### flag.FlagParser.int_multi
+### flag.int_multi
 ```v
 fn (fs mut FlagParser) int_multi(name string, abbr byte, usage string) []int
 ```
 int_multi returns all instances of values associated with the flags provided 
 In the case that none were found, it returns an empty array.
 
-### flag.FlagParser.int_opt
+### flag.int_opt
 ```v
 fn (fs mut FlagParser) int_opt(name string, abbr byte, usage string) ?int
 ```
 int_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
-### flag.FlagParser.int
+### flag.int
 ```v
 fn (fs mut FlagParser) int(name string, abbr byte, idefault int, usage string) int
 ```
@@ -197,21 +197,21 @@ defining and parsing an int flag
 version with abbr 
 ODO error handling for invalid string to int conversion
 
-### flag.FlagParser.float_multi
+### flag.float_multi
 ```v
 fn (fs mut FlagParser) float_multi(name string, abbr byte, usage string) []f32
 ```
 float_multi returns all instances of values associated with the flags provided 
 In the case that none were found, it returns an empty array.
 
-### flag.FlagParser.float_opt
+### flag.float_opt
 ```v
 fn (fs mut FlagParser) float_opt(name string, abbr byte, usage string) ?f32
 ```
 float_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
-### flag.FlagParser.float
+### flag.float
 ```v
 fn (fs mut FlagParser) float(name string, abbr byte, fdefault f32, usage string) f32
 ```
@@ -223,21 +223,21 @@ defining and parsing a float flag
 version with abbr 
 ODO error handling for invalid string to float conversion
 
-### flag.FlagParser.string_multi
+### flag.string_multi
 ```v
 fn (fs mut FlagParser) string_multi(name string, abbr byte, usage string) []string
 ```
 string_multi returns all instances of values associated with the flags provided 
 In the case that none were found, it returns an empty array.
 
-### flag.FlagParser.string_opt
+### flag.string_opt
 ```v
 fn (fs mut FlagParser) string_opt(name string, abbr byte, usage string) ?string
 ```
 string_opt returns an optional that returns the value associated with the flag. 
 In the situation that the flag was not provided, it returns null.
 
-### flag.FlagParser.string
+### flag.string
 ```v
 fn (fs mut FlagParser) string(name string, abbr byte, sdefault string, usage string) string
 ```
@@ -248,32 +248,32 @@ defining and parsing a string flag
      the default value is returned 
 version with abbr
 
-### flag.FlagParser.limit_free_args_to_at_least
+### flag.limit_free_args_to_at_least
 ```v
 fn (fs mut FlagParser) limit_free_args_to_at_least(n int) void
 ```
-### flag.FlagParser.limit_free_args_to_exactly
+### flag.limit_free_args_to_exactly
 ```v
 fn (fs mut FlagParser) limit_free_args_to_exactly(n int) void
 ```
-### flag.FlagParser.limit_free_args
+### flag.limit_free_args
 ```v
 fn (fs mut FlagParser) limit_free_args(min, max int) void
 ```
 this will cause an error in finalize() if free args are out of range 
 (min, ..., max)
 
-### flag.FlagParser.arguments_description
+### flag.arguments_description
 ```v
 fn (fs mut FlagParser) arguments_description(description string) void
 ```
-### flag.FlagParser.usage
+### flag.usage
 ```v
 fn (fs FlagParser) usage() string
 ```
 collect all given information and
 
-### flag.FlagParser.finalize
+### flag.finalize
 ```v
 fn (fs FlagParser) finalize() ?[]string
 ```

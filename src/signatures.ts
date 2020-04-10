@@ -1,8 +1,8 @@
 import Parser from "web-tree-sitter";
-import { findChildByType, TypeProperties } from "./types";
+import { findChildByType, Symbol } from "./types";
 import { isNodePublic } from "./utils";
 
-export function buildFnSignature(node: Parser.SyntaxNode | null, withPub: boolean = true): string {
+export function buildFnSignature(node: Parser.SyntaxNode, withPub: boolean = true): string {
     const isPublic = isNodePublic(node);
     const receiver = node?.type === "method_declaration" ? node.childForFieldName('receiver')?.text + ' ' : '';
     const name = node?.childForFieldName('name');
@@ -27,7 +27,7 @@ export function buildEnumSignature(node: Parser.SyntaxNode | null, withPub: bool
     return `${(isPublic && withPub) ? 'pub ' : ''} enum ${name} {\n${members.join('\n')}\n}`
 }
 
-export function buildSignature(pType: TypeProperties): string {
+export function buildSignature(pType: Symbol): string {
     const node = pType.node as Parser.SyntaxNode;
 
     switch (pType.type) {
@@ -110,6 +110,10 @@ export function buildComment(start_node: Parser.SyntaxNode, backwards: boolean =
 
         if (c.startsWith('/**')) {
             return c.substring('/** '.length, c.length);
+        }
+
+        if (c.startsWith('**')) {
+            return c.substring('**'.length, c.length);
         }
 
         if (c.startsWith('*')) {

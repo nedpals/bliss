@@ -3,9 +3,7 @@
 ## Contents
 - [glm.Mat4](#glmmat)
 - [glm.vec3](#glmvec)
-- [glm.Vec3.str](#glmvecstr)
-- [glm.Vec2.str](#glmvecstr)
-- [glm.Mat4.str](#glmmatstr)
+- [glm.str](#glmstr)
 - [glm.translate](#glmtranslate)
 - [glm.ortho](#glmortho)
 - [glm.scale](#glmscale)
@@ -36,17 +34,9 @@
 ```v
 fn vec3(x, y, z f32) Vec3
 ```
-### glm.Vec3.str
+### glm.str
 ```v
 fn (v Vec3) str() string
-```
-### glm.Vec2.str
-```v
-fn (v Vec2) str() string
-```
-### glm.Mat4.str
-```v
-fn (m Mat4) str() string
 ```
 ### glm.translate
 ```v

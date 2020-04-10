@@ -1,54 +1,60 @@
 import Parser from "web-tree-sitter";
-import { SymbolKind } from "./symbols";
-export interface TypeProperties {
-    type: string;
+import { SymbolKind, CompletionItemKind } from "./symbols";
+export declare type Symbols = Map<string, Map<string, Symbol>>;
+interface ParsedSymbol {
     name: string;
-    file?: string;
-    children?: {
-        [name: string]: TypeProperties;
-    };
-    parent?: TypeProperties;
-    node?: Parser.SyntaxNode;
+    sym: Symbol;
+}
+export declare class Symbol {
+    name: string;
+    file: string;
+    type: string;
+    children: Map<string, Symbol>;
+    parent: Symbol;
+    node: Parser.SyntaxNode;
     returnType: string;
     symbolKind: SymbolKind;
+    completionItemKind: CompletionItemKind;
+    module: string;
+    isMut: boolean;
+    isPublic: boolean;
+    constructor(name: string, type: string);
 }
-export interface Types {
-    [moduleName: string]: {
-        [name: string]: TypeProperties;
-    };
-}
-interface ParsedType {
-    name: string;
-    props: TypeProperties;
-}
-export declare class TypeMap {
+export declare class SymbolMap {
     private node;
     private filepath;
-    private types;
+    symbols: Symbols;
     moduleName: string;
-    constructor(filepath: string, node: Parser.SyntaxNode);
+    constructor(filepath: string, node: Parser.SyntaxNode, autogenerate?: boolean);
+    has: (moduleName: string) => boolean;
     setNode(node: Parser.SyntaxNode): void;
-    getAll(): Types;
-    get(key: string): TypeProperties;
-    set(key: string, props: TypeProperties): void;
-    insertParent(key: string, prop: TypeProperties): void;
-    register(pType: ParsedType): void;
-    registerChild(pType: ParsedType, parent: string): void;
-    generate(log?: boolean): void;
-    identifyType(node: Parser.SyntaxNode | null): string;
-    parseTypedef(node: Parser.SyntaxNode): ParsedType;
-    parseFunction(node: Parser.SyntaxNode): ParsedType;
-    parseMethodReceiver(pType: ParsedType): void;
-    parseFunctionParameters(pType: ParsedType): ParsedType[];
-    parseFunctionBody(pType: ParsedType): ParsedType[];
-    parseInterface(node: Parser.SyntaxNode): ParsedType;
-    parseInterfaceMethods(pType: ParsedType): ParsedType[];
-    parseConstants(node: Parser.SyntaxNode): ParsedType[];
-    parseStruct(node: Parser.SyntaxNode): ParsedType;
-    parseStructFields(pType: ParsedType): ParsedType[];
-    parseVariable(node: Parser.SyntaxNode, pType?: ParsedType): ParsedType;
-    parseEnum(node: Parser.SyntaxNode): ParsedType;
-    parseEnumValues(pType: ParsedType): ParsedType[];
+    setFile(filepath: string): void;
+    get: (key: string) => Symbol;
+    getFrom: (moduleName: string) => Map<string, Symbol>;
+    getAll: () => Symbols;
+    set: (key: string, sym: Symbol) => void;
+    insertParent: (key: string, sym: Symbol) => void;
+    register({ name, sym }: ParsedSymbol): void;
+    registerChild(pSym: ParsedSymbol, parent: string): void;
+    registerChildToProp({ name, sym }: ParsedSymbol, parent: Symbol): void;
+    getPublicSymbols(except?: string): Symbols;
+    generate(exclude?: string[]): void;
+    static get basicTypes(): string[];
+    static identify(node: Parser.SyntaxNode, customTypes?: string[]): string;
+    identifyType(node: Parser.SyntaxNode): string;
+    parseTypedef(node: Parser.SyntaxNode): ParsedSymbol;
+    parseFunction(node: Parser.SyntaxNode): ParsedSymbol;
+    parseMethod(pSym: ParsedSymbol): ParsedSymbol[];
+    parseFunctionParameters(pSym: ParsedSymbol): ParsedSymbol[];
+    parseFunctionBody(pSym: ParsedSymbol): ParsedSymbol[];
+    parseInterface(node: Parser.SyntaxNode): ParsedSymbol;
+    parseInterfaceMethods(pSym: ParsedSymbol): ParsedSymbol[];
+    parseConstants(node: Parser.SyntaxNode): ParsedSymbol[];
+    parseStruct(node: Parser.SyntaxNode): ParsedSymbol;
+    parseStructFields(pSym: ParsedSymbol): ParsedSymbol[];
+    parseVariable(node: Parser.SyntaxNode, pSym?: ParsedSymbol): ParsedSymbol;
+    parseEnum(node: Parser.SyntaxNode): ParsedSymbol;
+    parseEnumValues(pSym: ParsedSymbol): ParsedSymbol[];
 }
 export declare function findChildByType(node: Parser.SyntaxNode | null, name: string): Parser.SyntaxNode | null;
 export declare function filterChildrenByType(node: Parser.SyntaxNode | null, name: string | string[]): Parser.SyntaxNode[] | undefined;

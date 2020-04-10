@@ -1,11 +1,8 @@
 import Parser from "web-tree-sitter";
 import { parse as path_parse } from "path";
+import { normalizePath } from "./utils";
 
-export interface ParsedFiles {
-    [base_paths: string]: {
-        [filename: string]: Parser.Tree
-    }
-}
+export type ParsedFiles = Map<string, Map<string, Parser.Tree>>;
 
 export interface ContentChanges { 
     startIndex: number,
@@ -21,52 +18,31 @@ export interface ContentChanges {
 }
 
 export class TreeList {
-    private trees: ParsedFiles = {};
+    private trees: ParsedFiles = new Map();
     private parser: Parser;
 
     constructor(parser: Parser) {
         this.parser = parser;
     }
 
-    async new(input: { filepath: string, source: string }) {
-        let tree;
-
+    new(filepath: string, source: string) {
         const parser = this.parser;
-        const treePaths = TreeList.getTreePath(input.filepath);
-        const dir = treePaths[0];
-        const base = treePaths[1]; 
+        const [dir, base] = TreeList.getTreePath(filepath);
+        const tree = parser.parse(source);
 
-        if (typeof input.source != "undefined") {
-            tree = parser.parse(input.source);
+        if (!this.trees.has(dir)) {
+            this.trees.set(dir, new Map());
         }
 
-        if (typeof tree !== "undefined") {
-            if (Object.keys(this.trees).indexOf(dir) == -1) {
-                this.trees[dir] = {};
-            }
-
-            this.trees[dir][base] = tree;
-        }
+        this.trees.get(dir).set(base, tree);
     }
 
-    async update(filepath: string, source: string, ...changes: ContentChanges[]) {
+    update(filepath: string, source: string, ...changes: ContentChanges[]) {
         if (changes.length == 0) return;
-        const old = this.get(filepath); // edit.document.uri.toString()
-        const treePaths = TreeList.getTreePath(filepath);
-        const dir = treePaths[0];
-        const base = treePaths[1]; 
+        const old = this.get(filepath);
+        const [dir, base] = TreeList.getTreePath(filepath);
 
         for (const c of changes) {
-            //const startIndex = e.rangeOffset
-            // const oldEndIndex = e.rangeOffset + e.rangeLength
-            // const newEndIndex = e.rangeOffset + e.text.length
-            // const startPos = edit.document.positionAt(startIndex)
-            // const oldEndPos = edit.document.positionAt(oldEndIndex)
-            // const newEndPos = edit.document.positionAt(newEndIndex)
-            // const startPosition = asPoint(startPos)
-            // const oldEndPosition = asPoint(oldEndPos)
-            // const newEndPosition = asPoint(newEndPos)
-            // const delta = {startIndex, oldEndIndex, newEndIndex, startPosition, oldEndPosition, newEndPosition}
             old.edit({
                 startIndex: c.startIndex,
                 startPosition: c.startPos,
@@ -76,20 +52,33 @@ export class TreeList {
                 newEndPosition: c.new.endPos
             });
         }
-        const t = this.parser.parse(source, old) // TODO don't use getText, use Parser.Input // edit.document.getText()
-        this.trees[dir][base] = t;
+        const t = this.parser.parse(source, old);
+        this.trees.get(dir).set(base, t);
+    }
+
+    has(filepath: string): boolean {
+        const [dir, base] = TreeList.getTreePath(filepath);
+        
+        return this.trees.has(dir) && this.trees.get(dir).has(base);
     }
 
     get(filepath: string): Parser.Tree {
-        const treePaths = TreeList.getTreePath(filepath);
-        const dir = treePaths[0];
-        const base = treePaths[1]; 
+        const [dir, base] = TreeList.getTreePath(filepath);
 
-        return this.trees[dir][base];
+        return this.trees.get(dir).get(base);
+    }
+
+    delete(filepath: string): void {
+        let [dir, base] = TreeList.getTreePath(filepath);
+        this.trees.get(dir).delete(base);
+
+        if (this.trees.get(dir).size == 0) {
+            this.trees.delete(dir);
+        }
     }
 
     static getTreePath(filepath: string): string[] {
-        let { dir, base } = path_parse(filepath);
+        let { dir, base } = path_parse(normalizePath(filepath));
         if (dir.length == 0) { dir = '.'; }
 
         return [dir, base];
