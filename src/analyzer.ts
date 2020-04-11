@@ -74,6 +74,7 @@ export class Analyzer {
         let parentModName = this.importer.findModuleName(basename(parent));
         let moduleName = Analyzer.getModuleNameFromTree(tree);
         
+        if (moduleName === 'main') return moduleName;
         if (typeof this.importer.depGraph[parentModName] !== "undefined") {
             moduleName = parentModName + '.' + moduleName;
         } else {
@@ -109,11 +110,11 @@ export class Analyzer {
         return moduleName;
     }
 
-    async open(filepath: string, source?: string): Promise<void> {
+    open(filepath: string, source?: string): Promise<void> {
         let fp = normalizePath(filepath);
         if (this.trees.has(fp)) return;
-        const _source = typeof source === "undefined" ? await promisify(fs.readFile)(fp, { encoding: 'utf-8' }) : source;
-        this.trees.new(fp, _source)
+        const _source = typeof source === "undefined" ? fs.readFileSync(fp, { encoding: 'utf-8' }) : source;
+        this.trees.new(fp, _source);
 
         return this.importer.getAndResolve(fp, this)
     }
@@ -131,10 +132,10 @@ export class Analyzer {
 
     async getLocalSuggestions(filepath: string, options: { pos?: Parser.Point, range?: Parser.Range }): Promise<Symbols> {
         const tree = this.trees.get(filepath);
+        const node = tree.rootNode;
 
         let isParent: boolean = false;
         let fromFn: boolean = false;
-        let node = tree.rootNode;
         let locals: SymbolMap = new SymbolMap(filepath, node, false);
         let parentNode = options.range ? 
                 node.namedDescendantForPosition(options.range.startPosition, options.range.endPosition) : 
@@ -258,8 +259,7 @@ export class Analyzer {
     async getGlobalSuggestions(filepath: string, includeModules: boolean = false, publicOnlyOnMod: boolean = true): Promise<void> {
         const tree = this.trees.get(filepath);
         const moduleName = await this.getFullModuleName(filepath);
-        let node = tree.rootNode;
-        let suggestions: SymbolMap = new SymbolMap(filepath, node, false);
+        const node = tree.rootNode;
         const generateSuggestions = (fp, modName) => {
             suggestions.setFile(fp);
             suggestions.setNode(this.trees.get(fp).rootNode);
@@ -267,10 +267,13 @@ export class Analyzer {
             suggestions.generate();
         }
 
+        if (typeof this.importer.depGraph[moduleName] === 'undefined') return;
+        let suggestions: SymbolMap = new SymbolMap(filepath, node, false);
         if (includeModules) {
             const deps = this.importer.depGraph[moduleName].dependencies;
 
             for (const mod of deps.values()) {
+                if (typeof this.importer.depGraph[mod] === 'undefined') continue;
                 const files = this.importer.depGraph[mod].files;
                 for (const f of files) { generateSuggestions(f, mod); }
             }

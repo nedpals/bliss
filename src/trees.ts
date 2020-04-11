@@ -72,7 +72,7 @@ export class TreeList {
         let [dir, base] = TreeList.getTreePath(filepath);
         this.trees.get(dir).delete(base);
 
-        if (this.trees.get(dir).size == 0) {
+        if (this.trees.get(dir).size === 0) {
             this.trees.delete(dir);
         }
     }

@@ -11,6 +11,7 @@ export declare class Importer {
     depGraph: DepGraph;
     findModuleName(name: string): string;
     static get(rootNode: Parser.SyntaxNode): Promise<Set<Module>>;
+    static importModulePaths(additionalPaths?: string[]): Promise<string[]>;
     static resolveModuleFilepaths(moduleName: Module, excludeOSSuffixes?: boolean, paths?: string[]): Promise<string[]>;
     static resolveFromFilepath(filepath: string, excludeOSSuffixes?: boolean): Promise<string[]>;
     import(modules: Set<Module>, analyzer: Analyzer, paths?: string[]): Promise<void>;

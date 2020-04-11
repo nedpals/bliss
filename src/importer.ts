@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { excludedOSSuffixes, normalizePath } from "./utils";
 import { Analyzer } from "./analyzer";
 import which from "which";
+import slash from "slash";
 
 export type Module = string;
 
@@ -44,24 +45,30 @@ export class Importer {
         return modules;
     }
 
-    static async resolveModuleFilepaths(moduleName: Module, excludeOSSuffixes: boolean = true, paths: string[] = []): Promise<string[]> {
-        let resolved: string[] = [];
-        const _module = moduleName.split('.');
+    static async importModulePaths(additionalPaths: string[] = []): Promise<string[]> {
         const vPath = await which('v');
-        let importModulePaths = [
-            ...paths,
+        const importModulePaths = [
+            ...additionalPaths,
             process.cwd(),
             path.join(process.cwd(), 'modules'),
             path.join(path.dirname(vPath), 'vlib'),
             path.join(homedir(), '.vmodules')
         ];
 
+        return importModulePaths
+    }
+
+    static async resolveModuleFilepaths(moduleName: Module, excludeOSSuffixes: boolean = true, paths: string[] = []): Promise<string[]> {
+        let resolved: string[] = [];
+        const _module = moduleName.split('.');
+        const importModulePaths = await Importer.importModulePaths();
+
         for (let i = 0; i < importModulePaths.length; i++) {
-            const p = importModulePaths[i];
+            const p = slash(importModulePaths[i]);
             const excludedFiles = (() => {
                 const prefixes = ['*_test', '*_js'];
                 if (excludeOSSuffixes) prefixes.push(...excludedOSSuffixes.map(o => '*' + o));
-
+                
                 return `!(${prefixes.join('|')}).v`
             })();
         
@@ -110,7 +117,7 @@ export class Importer {
                 const unique = [];
                 try {
                     const filepaths = await Importer.resolveModuleFilepaths(m, true, paths);
-
+                    if (filepaths.length == 0) return unique;
                     for (const file of filepaths) {
                         if (analyzer.trees.has(file)) continue;
                         unique.push(analyzer.open(file));
@@ -122,7 +129,7 @@ export class Importer {
                 return unique;
             })();
             
-            
+            if (resolvedPaths.length === 0) continue;
             await Promise.all(resolvedPaths);
         }
     }

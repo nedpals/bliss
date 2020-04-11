@@ -11,7 +11,7 @@ async function navigate() {
     } catch(e) {
         console.log(e);
     } finally {
-        const filename = "C:\\Users\\admin\\Documents\\Coding\\vlang\\vex\\mime\\mime.v";
+        const filename = "C:\\Users\\admin\\Documents\\Coding\\vlang\\vex\\picoserver\\middleware.v";
 
         try {
             await analyzer.open(filename);
@@ -25,7 +25,7 @@ async function navigate() {
                 await analyzer.getGlobalSuggestions(filename, true, true);
                 suggestions = await analyzer.getLocalSuggestions(filename, { pos: { row: 54, column: 37 } });
                 // console.log(analyzer.cachedSymbols.get('builtin').get('string'));
-                // console.dir(analyzer.cachedSymbols);
+                console.dir(analyzer.cachedSymbols);
                 console.log(suggestions);
             } catch(e) {
                 console.log(e);
